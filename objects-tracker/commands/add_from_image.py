@@ -186,7 +186,10 @@ async def add_from_image(interaction: discord.Interaction, image: discord.Attach
         )
         objects_text = ''
         try:
-            objects_text = dict(json.loads(w.text))['result']['textAnnotation']['fullText']
+            if 'result' in dict(json.loads(w.text)):
+                objects_text = dict(json.loads(w.text))['result']['textAnnotation']['fullText']
+            else:
+                raise KeyError
         except Exception as e:
             logging.error(str(e))
             await interaction.followup.send(
