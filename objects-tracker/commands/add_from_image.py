@@ -75,8 +75,8 @@ async def add_from_image(interaction: discord.Interaction, image: discord.Attach
         obj_location = objects_text.split("\n")[-1]
         hours_match = re.search(r'(\d+) (ч|h)', objects_text)
         minutes_match = re.search(r'(\d+) (m|м)', objects_text)
-        hours = int(hours_match.group(0))
-        minutes = int(minutes_match.group(0))
+        hours = int(hours_match.group(1))
+        minutes = int(minutes_match.group(1))
         
         # Get the current date and time
         current_time = datetime.datetime.now(datetime.timezone.utc)
