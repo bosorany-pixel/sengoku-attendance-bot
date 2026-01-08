@@ -15,5 +15,6 @@ async def add_payment(interaction: discord.Interaction, payment: str):
         await interaction.response.send_message("Что-то не так, проверь формат пожалуйста", ephemeral=True)
         return
     await interaction.response.send_message("Сейчас создам", ephemeral=True)
-    msg = await interaction.channel.send(f"создана выплата {payment}кк. \nКидайте скриншоты пачек в ветку В ТЕЧЕНИЕ ЧАСА (до {(datetime.now(timezone.utc) + timedelta(hours=1)).strftime("%Y-%m-%d %H:%M:%S")} utc)")
+    time = (datetime.now(timezone.utc) + timedelta(hours=1)).strftime("%Y-%m-%d %H:%M:%S")
+    msg = await interaction.channel.send(f"создана выплата {payment}кк. \nКидайте скриншоты пачек в ветку В ТЕЧЕНИЕ ЧАСА (до {time} utc)")
     await msg.create_thread(name="скриншоты пачек сюда")
