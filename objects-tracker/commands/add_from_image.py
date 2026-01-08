@@ -28,12 +28,12 @@ async def add_from_image(interaction: discord.Interaction, image: discord.Attach
     logging.info("got an image")
     if os.getenv('GENAI_SOL') in {"true", "yes", "y"}:
         if not gemini_configured:
-            await interaction.response.send_message("Ошибка: API для Gemini не сконфигурирован (нет GOOGLE_API_KEY).",
+            await interaction.response.send_message_message("Ошибка: API для Gemini не сконфигурирован (нет GOOGLE_API_KEY).",
                                                     ephemeral=True)
             return
 
         if not image.content_type or not image.content_type.startswith("image/"):
-            await interaction.response.send_message("Ошибка: Прикрепленный файл не является изображением.", ephemeral=True)
+            await interaction.response.send_message_message("Ошибка: Прикрепленный файл не является изображением.", ephemeral=True)
             return
 
         await interaction.response.defer(ephemeral=True, thinking=True)
@@ -132,7 +132,7 @@ async def add_from_image(interaction: discord.Interaction, image: discord.Attach
 
 
                 if not all([location, object_type, time_str]):
-                    await interaction.followup.send(
+                    await interaction.response.send_message(
                         f"Не удалось распознать обязательные данные. Модель вернула: \n`{response_content}`",
                         ephemeral=True
                     )
@@ -141,9 +141,9 @@ async def add_from_image(interaction: discord.Interaction, image: discord.Attach
                 error_message = await _internal_add_item(interaction, time_str=str(time_str), location=location, object_name=object_type)
 
                 if error_message:
-                    await interaction.followup.send(error_message, ephemeral=True)
+                    await interaction.response.send_message(error_message, ephemeral=True)
                 else:
-                    await interaction.followup.send(
+                    await interaction.response.send_message(
                         f"✅ Распознано и добавлено:\n"
                         f"**Объект:** {object_type}\n"
                         f"**Локация:** {location}\n"
@@ -153,12 +153,12 @@ async def add_from_image(interaction: discord.Interaction, image: discord.Attach
 
             except (json.JSONDecodeError, TypeError) as e:
                 logging.error(f"Не удалось распарсить JSON из ответа Gemini: {e}. Ответ: {response_content}")
-                await interaction.followup.send("Ошибка: Не удалось обработать ответ от сервиса распознавания.",
+                await interaction.response.send_message("Ошибка: Не удалось обработать ответ от сервиса распознавания.",
                                                 ephemeral=True)
 
         except Exception as e:
             logging.error(f"Ошибка в команде add_from_image: {e}", exc_info=True)
-            await interaction.followup.send("Произошла критическая ошибка при обработке изображения.", ephemeral=True)
+            await interaction.response.send_message("Произошла критическая ошибка при обработке изображения.", ephemeral=True)
     else:
         image_bytes = await image.read()
         img = Image.open(io.BytesIO(image_bytes))
@@ -192,13 +192,13 @@ async def add_from_image(interaction: discord.Interaction, image: discord.Attach
                 objects_text = ""
         except Exception as e:
             logging.error(str(e))
-            await interaction.followup.send(
+            await interaction.response.send_message(
                         f"Ошибка api {w.status_code}: \n`{w.text}`",
                         ephemeral=True
                     )
             return
         if len(objects_text) == 0:
-            await interaction.followup.send(w.text, ephemeral=True)
+            await interaction.response.send_message(w.text, ephemeral=True)
         if objects_text[-1] == '\n':
             objects_text = objects_text[:-1]
         obj_name = objects_text.split("\n")[0]
@@ -219,9 +219,9 @@ async def add_from_image(interaction: discord.Interaction, image: discord.Attach
         error_message = await _internal_add_item(interaction, str(obj_time), obj_location, object_type)
 
         if error_message:
-            await interaction.followup.send(error_message, ephemeral=True)
+            await interaction.response.send_message(error_message, ephemeral=True)
         else:
-            await interaction.followup.send(
+            await interaction.response.send_message(
                         f"✅ Распознано и добавлено:\n"
                         f"**Объект:** {obj_name}\n"
                         f"**Локация:** {obj_location}\n"
