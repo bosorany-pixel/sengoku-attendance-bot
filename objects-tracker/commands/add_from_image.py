@@ -34,13 +34,13 @@ async def add_from_image(interaction: discord.Interaction, image: discord.Attach
         buffered = io.BytesIO()
         img.save(buffered, format="JPEG")
         image_bytes = buffered.getvalue()
-        content = image_bytes.decode('latin1')  # Decode bytes to string for JSON
+        content = image_bytes.decode('utf-8')  # Decode bytes to string for JSON
 
         # Create the JSON body
         body = {
             "mimeType": "jpg",
             "languageCodes": ["ru", "en"],
-            "content": image_bytes
+            "content": content
         }
 
         headers= {"Content-Type": "application/json",
