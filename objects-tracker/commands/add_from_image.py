@@ -1,4 +1,5 @@
 import discord
+import base64
 import datetime
 from discord import app_commands
 import logging
@@ -34,7 +35,7 @@ async def add_from_image(interaction: discord.Interaction, image: discord.Attach
         buffered = io.BytesIO()
         img.save(buffered, format="JPEG")
         image_bytes = buffered.getvalue()
-        content = image_bytes.decode('utf-8')  # Decode bytes to string for JSON
+        content = base64.b64encode(image_bytes).decode("ascii")
 
         # Create the JSON body
         body = {
