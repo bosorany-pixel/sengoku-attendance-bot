@@ -60,16 +60,6 @@ bot.tree.add_command(add_from_image)
 async def cleanup_data_loop():
     await cleanup_data.cleanup_data(bot)
 
-@bot.event
-async def on_interaction(interaction: discord.Interaction):
-    logging.info(
-        f"INTERACTION type={interaction.type} "
-        f"guild={interaction.guild_id} channel={interaction.channel_id} "
-        f"user={interaction.user} data={getattr(interaction, 'data', None)}"
-    )
-    await bot.process_application_commands(interaction)
-
-
 @bot.tree.command(name="ping", description="ping")
 async def ping(interaction: discord.Interaction):
     logging.info("PING received")
