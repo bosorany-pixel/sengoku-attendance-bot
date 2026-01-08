@@ -86,7 +86,16 @@ async def add_from_image(interaction: discord.Interaction, image: discord.Attach
         
         # Add the timedelta to the current time
         obj_time = current_time + time_delta
-        error_message = await _internal_add_item(interaction, str(obj_time), obj_location, object_name=obj_name)
+
+        logging.info(f"{obj_name}, {obj_location}, {obj_time}")        
+        error_message = await _internal_add_item(
+            interaction,
+            location=obj_location,
+            object_name=obj_name,
+            time_str="",
+            minutes=minutes,
+            hours=hours
+        )
 
         if error_message:
             await interaction.response.send_message(error_message, ephemeral=True)
