@@ -38,12 +38,19 @@ async def on_ready():
             lgr.info(f"guild {GUILD_ID} added")
 
     print(f"Logged in as {bot.user} (id={bot.user.id})")
-    ch = bot.get_channel(1427006146203615332)
-    await ch.send("hiiii")
 
-@bot.tree.command(name="show", description="Показать, сколько изображений сохранено")
-async def show(interaction: discord.Interaction):
-    await interaction.response.send_message("только на сервере")
+@bot.tree.command(name="add_payment", description="создать выплату")
+@bot.tree.describe(
+    payment="Сумма выплаты в миллионах, (например '22', '13.6', '32.1')"
+)
+async def add_payment(interaction: discord.Interaction, payment: str):
+    try:
+        payment = int(payment)
+    except:
+        await interaction.response.send_message("Что-то не так, проверь формат пожалуйста", ephemeral=True)
+    
+    msg = await interaction.channel.send(f"создана выплата {payment}кк. Кидайте скриншоты пачек в ветку В ТЕЧЕНИЕ ЧАСА (до {datetime.now(timezone.utc) + timedelta(hours=1)} utc)")
+    await msg.create_thread("скриншоты пачек сюда")
 
 if __name__ == "__main__":
     bot.run(TOKEN)
