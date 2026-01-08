@@ -27,138 +27,7 @@ gemini_configured = bool(api_key)
 async def add_from_image(interaction: discord.Interaction, image: discord.Attachment):
     logging.info("got an image")
     if os.getenv('GENAI_SOL') in {"true", "yes", "y"}:
-        if not gemini_configured:
-            await interaction.response.send_message_message("Ошибка: API для Gemini не сконфигурирован (нет GOOGLE_API_KEY).",
-                                                    ephemeral=True)
-            return
-
-        if not image.content_type or not image.content_type.startswith("image/"):
-            await interaction.response.send_message_message("Ошибка: Прикрепленный файл не является изображением.", ephemeral=True)
-            return
-
-        await interaction.response.defer(ephemeral=True, thinking=True)
-
-        try:
-            genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-2.0-flash')
-
-            image_bytes = await image.read()
-            img = Image.open(io.BytesIO(image_bytes))
-
-            prompt = [
-                """
-                Ты — эксперт по анализу игровых скриншотов из игры Albion Online. Твоя задача — извлечь из изображения данные об объекте и классифицировать его.
-
-                КЛАССИФИКАЦИЯ ОБЪЕКТОВ:
-                1. Если в названии есть слова типа:
-                - "волокн(о|а)" или "fiber" -> тип "Ткань"
-                - "шкур(а|ы)" или "skin" -> тип "Кожа" 
-                - "руд(а|ы)" или "ore" -> тип "Руда"
-                - "древесин(а|ы)" или "wood" -> тип "Дерево"
-                - "вихр(ь|я)" или "vortex" -> тип "Вихрь"
-                - "сил(ы,а) или "anomaly" -> тип "Сфера"
-                
-                2. Для объектов с тировыми обозначениями (Tier 8.4, T8.4, Bolca 8. kademe 4 и т.п.):
-                - Добавь префикс тира к типу: "8.4 Ткань", "8.4 Руда" и т.д.
-
-                3. Для "Вихрь" - ОПРЕДЕЛЕНИЕ ЦВЕТА:
-                Силовой вихрь выглядит как КРИСТАЛЛ с вращающимися лентами/полосками вокруг.
-                Определи ЦВЕТ КРИСТАЛЛА (не лент!):
-                - ЖЕЛТЫЙ или ЗОЛОТОЙ кристалл -> "Золотой вихрь"
-                - ФИОЛЕТОВЫЙ кристалл -> "Фиолетовый вихрь"  
-                - СИНИЙ кристалл -> "Синий вихрь"
-                - ЗЕЛЕНЫЙ кристалл -> "Зеленый вихрь"
-                
-                4. Для сфера - ОПРЕДЕЛЕНИЕ ЦВЕТА:
-                Аномамалия силы выглядит как СФЕРА определёного цвета.
-                Определи ЦВЕТ СФЕРЫ :
-                - ЖЕЛТЫЙ или ЗОЛОТОЙ сфера -> "Золотая сфера"
-                - ФИОЛЕТОВЫЙ сфера -> "Фиолетовая сфера"  
-                - СИНИЙ сфера -> "Синняя сфера"
-                - ЗЕЛЕНЫЙ сфера -> "Зеленая сфера"
-
-                ИЗВЛЕКАЕМЫЕ ДАННЫЕ:
-                1. 'location': Название локации (оставь как есть)
-                2. 'object_type': Классифицированный тип объекта (см. правила выше)
-                3. 'time_str': Время до появления объекта.
-                - Внимательно определи числа и их единицы времени (часы, минуты, секунды) на любом языке.
-                - **Твоя главная задача — вернуть это время в виде строки на РУССКОМ языке.**
-                - Используй следующие сокращения: 'ч' для часов, 'м' для минут, 'с' для секунд.               
-                - **ПРИМЕРЫ ПРЕОБРАЗОВАНИЯ:**
-                    - Если на картинке "Unlocks In: 30 m 19 s" -> верни "30м 19с".
-                    - Если на картинке "Откроется через: 1 h 5 m" -> верни "1ч 5м".
-                    - Если на картинке "Appears in 25 minutes" -> верни "25м".
-                    - Если на картинке "45s" -> верни "45с".
-
-                ПРИМЕРЫ:
-                - "Растение с большим количеством волокна 8.4 тира" -> "8.4 Ткань"
-                - "A plant with plenty of Tier 8.4 fiber" -> "8.4 Ткань"  
-                - "Силовой вихрь" с ФИОЛЕТОВЫМ кристаллом -> "Фиолетовый вихрь"
-                - "Жила с рудой" -> "Руда"
-
-                ВАЖНО:
-                - Всегда смотри на ЦВЕТ КРИСТАЛЛА, а не лент вокруг него
-                - Используй ТОЛЬКО эти 4 цвета: Золотой, Фиолетовый, Синий, Зеленый
-                - Если не можешь определить цвет -> верни "Силовой вихрь"
-
-                Верни ТОЛЬКО JSON:
-                {
-                "location": "название локации",
-                "object_type": "классифицированный тип",
-                "time_str": "время"
-                }
-                """,
-                img
-            ]
-
-            response = await interaction.client.loop.run_in_executor(
-                None,
-                lambda: model.generate_content(prompt, generation_config={"temperature": 0.0})
-            )
-
-            response_content = response.text
-            logging.info(f"Ответ от Gemini: {response_content}")
-
-            # Обработка ответа
-            try:
-                if response_content.startswith("```json"):
-                    response_content = response_content.strip("```json\n").strip("`\n")
-
-                api_data = json.loads(response_content)
-
-                location = api_data.get("location")
-                object_type = api_data.get("object_type")
-                time_str = api_data.get("time_str")
-
-
-                if not all([location, object_type, time_str]):
-                    await interaction.response.send_message(
-                        f"Не удалось распознать обязательные данные. Модель вернула: \n`{response_content}`",
-                        ephemeral=True
-                    )
-                    return
-
-                error_message = await _internal_add_item(interaction, time_str=str(time_str), location=location, object_name=object_type)
-
-                if error_message:
-                    await interaction.response.send_message(error_message, ephemeral=True)
-                else:
-                    await interaction.response.send_message(
-                        f"✅ Распознано и добавлено:\n"
-                        f"**Объект:** {object_type}\n"
-                        f"**Локация:** {location}\n"
-                        f"**Время:** {time_str}",
-                        ephemeral=True
-                    )
-
-            except (json.JSONDecodeError, TypeError) as e:
-                logging.error(f"Не удалось распарсить JSON из ответа Gemini: {e}. Ответ: {response_content}")
-                await interaction.response.send_message("Ошибка: Не удалось обработать ответ от сервиса распознавания.",
-                                                ephemeral=True)
-
-        except Exception as e:
-            logging.error(f"Ошибка в команде add_from_image: {e}", exc_info=True)
-            await interaction.response.send_message("Произошла критическая ошибка при обработке изображения.", ephemeral=True)
+        pass
     else:
         image_bytes = await image.read()
         img = Image.open(io.BytesIO(image_bytes))
@@ -171,7 +40,7 @@ async def add_from_image(interaction: discord.Interaction, image: discord.Attach
         body = {
             "mimeType": "jpg",
             "languageCodes": ["ru", "en"],
-            "content": content
+            "content": image_bytes
         }
 
         headers= {"Content-Type": "application/json",
@@ -216,7 +85,7 @@ async def add_from_image(interaction: discord.Interaction, image: discord.Attach
         
         # Add the timedelta to the current time
         obj_time = current_time + time_delta
-        error_message = await _internal_add_item(interaction, str(obj_time), obj_location, object_type)
+        error_message = await _internal_add_item(interaction, str(obj_time), obj_location, object_name=obj_name)
 
         if error_message:
             await interaction.response.send_message(error_message, ephemeral=True)
