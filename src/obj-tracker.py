@@ -38,6 +38,8 @@ async def on_ready():
             lgr.info(f"guild {GUILD_ID} added")
 
     print(f"Logged in as {bot.user} (id={bot.user.id})")
+    ch = bot.get_channel(1427006146203615332)
+    await ch.send("hiiii")
 
 @bot.tree.command(name="show", description="Показать, сколько изображений сохранено")
 async def show(interaction: discord.Interaction):
