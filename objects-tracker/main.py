@@ -16,7 +16,7 @@ import os
 import json
 from dotenv import load_dotenv
 
-from commands import add_data, show_data, delete_data, set_allowed_roles
+from commands import add_data, show_data, delete_data, set_allowed_roles, payments
 from commands.add_from_image import add_from_image
 from tasks import cleanup_data
 
@@ -54,6 +54,7 @@ bot.tree.add_command(add_data.add_data)
 bot.tree.add_command(show_data.show_data)
 bot.tree.add_command(delete_data.delete_data)
 bot.tree.add_command(set_allowed_roles.set_allowed_roles)
+bot.tree.add_command(payments.add_payment)
 bot.tree.add_command(add_from_image)
 
 @tasks.loop(minutes=1)
