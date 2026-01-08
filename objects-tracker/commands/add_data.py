@@ -152,7 +152,7 @@ async def _internal_add_item(
 )
 async def add_data(interaction: discord.Interaction, time_str: str, location: str, object_name: str):
     """Команда для ручного добавления объекта."""
-    error_message = await _internal_add_item(interaction, time_str, location, object_name)
+    error_message = await _internal_add_item(interaction, location, object_name, time_str)
     if error_message:
         await interaction.response.send_message(error_message, ephemeral=True)
     else:

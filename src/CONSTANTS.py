@@ -3,7 +3,10 @@ import os
 from datetime import date
 dotenv.load_dotenv()
 
-GUILD_IDS = {1355240968621658242}
+GUILD_IDS = {
+    1355240968621658242,
+    600703179360829483
+    }
 DISBAND_MESSAGES = {'дизбанд', 'диз', 'disband', 'dis'}
 TREASURY_MESSAGES = {'казну', 'казна'}
 FROM_HOURS = 26

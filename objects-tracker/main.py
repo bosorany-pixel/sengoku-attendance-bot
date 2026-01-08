@@ -1,8 +1,18 @@
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
+    handlers=[
+        logging.FileHandler("bot.log", encoding="utf-8"),
+        logging.StreamHandler()
+    ],
+    force=True
+)
 import asyncio
 import discord
 from discord.ext import commands, tasks
 import os
-import logging
 import json
 from dotenv import load_dotenv
 
@@ -10,11 +20,6 @@ from commands import add_data, show_data, delete_data, set_allowed_roles
 from commands.add_from_image import add_from_image
 from tasks import cleanup_data
 
-logging.basicConfig(
-    filename='bot.log',
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
 load_dotenv()
 
 DISCORD_BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
@@ -56,9 +61,26 @@ async def cleanup_data_loop():
     await cleanup_data.cleanup_data(bot)
 
 @bot.event
+async def on_interaction(interaction: discord.Interaction):
+    logging.info(
+        f"INTERACTION type={interaction.type} "
+        f"guild={interaction.guild_id} channel={interaction.channel_id} "
+        f"user={interaction.user} data={getattr(interaction, 'data', None)}"
+    )
+    await bot.process_application_commands(interaction)
+
+
+@bot.tree.command(name="ping", description="ping")
+async def ping(interaction: discord.Interaction):
+    logging.info("PING received")
+    await interaction.response.send_message("pong", ephemeral=True)
+
+
+@bot.event
 async def on_ready():
     logging.info(f'Bot {bot.user} is ready!')
     print(f'Bot {bot.user} is ready!')
+    print(DISCORD_BOT_TOKEN[:10])
     
     save_server_names(bot)
 
@@ -84,6 +106,15 @@ async def on_guild_remove(guild):
     logging.info(f"Бот удален с сервера: {guild.name} ({guild.id})")
     save_server_names(bot)
 
+@bot.tree.error
+async def on_app_command_error(interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
+    logging.exception("App command error", exc_info=error)
+    if interaction.response.is_done():
+        await interaction.followup.send(f"Ошибка: {error}", ephemeral=True)
+    else:
+        await interaction.response.send_message(f"Ошибка: {error}", ephemeral=True)
+
+
 async def main():
     try:
         await bot.start(DISCORD_BOT_TOKEN)
@@ -92,4 +123,4 @@ async def main():
         raise
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    bot.run(DISCORD_BOT_TOKEN)

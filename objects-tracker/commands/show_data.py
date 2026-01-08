@@ -65,6 +65,7 @@ def create_data_embed(guild_id: int) -> discord.Embed:
 
 @app_commands.command(name="show_data", description="Показывает список всех добавленных объектов.")
 async def show_data(interaction: discord.Interaction):
+    logging.info(f"/show_data called by {interaction.user} in channel {interaction.channel_id}")
     guild_id = interaction.guild_id
     channel_id = interaction.channel_id
 

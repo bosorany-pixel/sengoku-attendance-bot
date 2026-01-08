@@ -25,6 +25,7 @@ gemini_configured = bool(api_key)
                       description="Добавляет объект, распознав данные и ВИД с изображения (Gemini / yandex ocr).")
 @app_commands.describe(image="Изображение (скриншот) с данными об объекте")
 async def add_from_image(interaction: discord.Interaction, image: discord.Attachment):
+    logging.info("got an image")
     if os.getenv('GENAI_SOL') in {"true", "yes", "y"}:
         if not gemini_configured:
             await interaction.response.send_message("Ошибка: API для Gemini не сконфигурирован (нет GOOGLE_API_KEY).",
@@ -137,7 +138,7 @@ async def add_from_image(interaction: discord.Interaction, image: discord.Attach
                     )
                     return
 
-                error_message = await _internal_add_item(interaction, str(time_str), location, object_type)
+                error_message = await _internal_add_item(interaction, time_str=str(time_str), location=location, object_name=object_type)
 
                 if error_message:
                     await interaction.followup.send(error_message, ephemeral=True)
