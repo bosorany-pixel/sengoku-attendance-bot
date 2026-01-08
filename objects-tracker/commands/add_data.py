@@ -43,38 +43,38 @@ async def _internal_add_item(
         user_role_ids = [role.id for role in interaction.user.roles]
         if not any(role_id in allowed_role_ids for role_id in user_role_ids):
             return "У вас нет прав для добавления данных."
+    if len(time_str) != 0:
+        try:
+            processed_time_str = time_str.lower().replace(' ', '')
 
-    try:
-        processed_time_str = time_str.lower().replace(' ', '')
+            hours_match = re.search(r'(\d+)[чh]', processed_time_str)
+            if hours_match:
+                hours = int(hours_match.group(1))
 
-        hours_match = re.search(r'(\d+)[чh]', processed_time_str)
-        if hours_match:
-            hours = int(hours_match.group(1))
+            minutes_match = re.search(r'(\d+)[мm]', processed_time_str)
+            if minutes_match:
+                minutes = int(minutes_match.group(1))
 
-        minutes_match = re.search(r'(\d+)[мm]', processed_time_str)
-        if minutes_match:
-            minutes = int(minutes_match.group(1))
+            if not hours_match and not minutes_match and ':' in processed_time_str:
+                parts = processed_time_str.split(':')
+                if len(parts) == 2:
+                    hours = int(parts[0])
+                    minutes = int(parts[1])
+                else:
+                    raise ValueError("Неверный формат ЧЧ:ММ")
+            elif not hours_match and not minutes_match:
+                if processed_time_str.isdigit():
+                    minutes = int(processed_time_str)
+                else:
+                    raise ValueError("Нераспознанный формат времени")
 
-        if not hours_match and not minutes_match and ':' in processed_time_str:
-            parts = processed_time_str.split(':')
-            if len(parts) == 2:
-                hours = int(parts[0])
-                minutes = int(parts[1])
-            else:
-                raise ValueError("Неверный формат ЧЧ:ММ")
-        elif not hours_match and not minutes_match:
-            if processed_time_str.isdigit():
-                minutes = int(processed_time_str)
-            else:
-                raise ValueError("Нераспознанный формат времени")
+            if hours < 0 or minutes < 0 or minutes >= 60:
+                raise ValueError("Некорректное значение часов или минут.")
+            if hours == 0 and minutes == 0:
+                return "Время жизни объекта должно быть больше нуля."
 
-        if hours < 0 or minutes < 0 or minutes >= 60:
-            raise ValueError("Некорректное значение часов или минут.")
-        if hours == 0 and minutes == 0:
-            return "Время жизни объекта должно быть больше нуля."
-
-    except (ValueError, TypeError):
-        return f"Ошибка: Некорректный формат времени. Используйте форматы: `1ч 30м`, `2ч`, `45м`, `1:30`, `45`."
+        except (ValueError, TypeError):
+            return f"Ошибка: Некорректный формат времени. Используйте форматы: `1ч 30м`, `2ч`, `45м`, `1:30`, `45`."
 
     try:
         now_utc = datetime.now(timezone.utc)
