@@ -189,7 +189,7 @@ async def add_from_image(interaction: discord.Interaction, image: discord.Attach
             if 'result' in dict(json.loads(w.text)):
                 objects_text = dict(json.loads(w.text))['result']['textAnnotation']['fullText']
             else:
-                raise KeyError
+                objects_text = ""
         except Exception as e:
             logging.error(str(e))
             await interaction.followup.send(
@@ -197,7 +197,8 @@ async def add_from_image(interaction: discord.Interaction, image: discord.Attach
                         ephemeral=True
                     )
             return
-
+        if len(objects_text) == 0:
+            await interaction.followup.send(w.text, ephemeral=True)
         if objects_text[-1] == '\n':
             objects_text = objects_text[:-1]
         obj_name = objects_text.split("\n")[0]
