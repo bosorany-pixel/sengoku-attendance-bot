@@ -96,15 +96,6 @@ async def on_guild_remove(guild):
     logging.info(f"Бот удален с сервера: {guild.name} ({guild.id})")
     save_server_names(bot)
 
-@bot.tree.error
-async def on_app_command_error(interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
-    logging.exception("App command error", exc_info=error)
-    if interaction.response.is_done():
-        await interaction.followup.send(f"Ошибка: {error}", ephemeral=True)
-    else:
-        await interaction.response.send_message(f"Ошибка: {error}", ephemeral=True)
-
-
 async def main():
     try:
         await bot.start(DISCORD_BOT_TOKEN)
