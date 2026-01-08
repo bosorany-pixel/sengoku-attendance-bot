@@ -45,7 +45,7 @@ async def add_from_image(interaction: discord.Interaction, image: discord.Attach
         }
 
         headers= {"Content-Type": "application/json",
-          "Authorization": "Bearer {:s}".format(os.getenv("IAM_TOKEN")),
+          "Authorization": "Api-Key {:s}".format(os.getenv("YANDEX_API_KEY")),
           "x-folder-id": "b1g9o81kme3o99o6bh0f",
           "x-data-logging-enabled": "true"}
         
