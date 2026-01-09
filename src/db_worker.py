@@ -243,4 +243,5 @@ VALUES (?, ?)
             """,
             (uid,)
         )
+        print(rows)
         return round(sum(row[0] for row in rows if row[0] is not None), 3)

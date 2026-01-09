@@ -177,7 +177,7 @@ async def get_balance(interaction: discord.Interaction, username: str):
     if not uid:
         await interaction.response.send_message("Что-то не так, проверь ник пожалуйста", ephemeral=True)
         return
-    await interaction.response.send_message(f"сумма выплаты для {username} = {db_worker.get_balance(uid):,.0f}".replace(",", " "))
+    await interaction.response.send_message(f"сумма выплаты для {username} = {db_worker.get_balance(uid)}kk")
 
 @inc_payment.autocomplete("username")
 async def uname_pay_autocomplete(interaction: discord.Interaction, current: str):
