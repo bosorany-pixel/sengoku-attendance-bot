@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS PAYMENTS_TO_USERS (
     message_id INTEGER,
     PRIMARY KEY (ds_uid, message_id),
     FOREIGN KEY (ds_uid) REFERENCES USERS(uid),
-    FOREIGN KEY (message_id) REFERENCES EVENTS(message_id)
+    FOREIGN KEY (message_id) REFERENCES PAYMENTS(message_id)
 )
 ''')
 
@@ -227,7 +227,6 @@ VALUES (?, ?, ?, ?, ?)
     ))
         
     def link_user_to_payment(self, uid, payment_id) -> None:
-        print(f"debug {uid} - {payment_id}")
         self.execute('''
 INSERT OR REPLACE INTO PAYMENTS_TO_USERS (ds_uid, message_id)
 VALUES (?, ?)
