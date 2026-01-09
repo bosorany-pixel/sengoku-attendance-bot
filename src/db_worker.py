@@ -198,7 +198,11 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         return None
 
     def get_uid_by_name(self, server_name: str) -> datatypes.User | None:
-        uid = self.fetchone("SELECT * FROM USERS WHERE server_username like '%?%'", (server_name,))
+        uid = self.fetchone(
+            "SELECT * FROM USERS WHERE server_username LIKE ?",
+            (f"%{server_name}%",)
+        )
+
         if uid:
             return uid[0]
         else:
