@@ -89,7 +89,7 @@ async def on_message(message: discord.Message):
 
 
 @app_commands.command(name="add_payment", description="создать выплату")
-@app_commands.describe(payment="Сумма выплаты в миллионах, (например '22', '13.6', '32.1')")
+@app_commands.describe(payment="Сумма выплаты (например '22000000', '13600000', '32100000')")
 async def add_payment(interaction: discord.Interaction, payment: str):
     allowed_role_ids = load_allowed_roles(interaction.guild.id)
     if allowed_role_ids:
