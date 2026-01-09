@@ -67,7 +67,7 @@ async def on_message(message: discord.Message):
     deadline = active_threads.get(message.channel.id)
     if not deadline:
         return
-    now = datetime.now(timezone.utc)
+    now = datetime.datetime.now(timezone.utc)
     if now > deadline:
         active_threads.pop(message.channel.id, None)
         active_threads_messages.pop(message.channel.id, None)
