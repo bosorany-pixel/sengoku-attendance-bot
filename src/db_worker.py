@@ -239,7 +239,7 @@ VALUES (?, ?)
             select p.payment_ammount / p.user_amount as pay
             from PAYMENTS p
             join PAYMENTS_TO_USERS ul on p.message_id = ul.message_id
-            where ul.uid = ?
+            where ul.ds_uid = ?
             """,
             (uid,)
         )
