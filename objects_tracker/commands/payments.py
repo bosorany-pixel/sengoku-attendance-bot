@@ -62,6 +62,7 @@ def _pay_member(payment: float, username: str, msg_id: int, ch_id: int, guild_id
     return None
 
 async def on_message(message: discord.Message):
+    global counter
     counter += 1
     if counter >= 1000:
         await get_nicks(guild_id=os.getenv("DISCORD_GUILD_ID"))

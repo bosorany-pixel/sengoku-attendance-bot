@@ -16,6 +16,7 @@ class DBWorker:
             sql_path,
             'sengoku_bot.db'
         )):
+        print(f"connected to db on {db_path}")
         self.conn = sqlite3.connect(db_path)
         self.conn.execute("PRAGMA foreign_keys = ON")
         self.cursor = self.conn.cursor()
