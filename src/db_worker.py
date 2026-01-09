@@ -231,7 +231,7 @@ VALUES (?, ?, ?, ?, ?)
 INSERT OR REPLACE INTO PAYMENTS_TO_USERS (ds_uid, message_id)
 VALUES (?, ?)
 ''', (uid, payment_id))
-        self.execute('UPDATE PAYMENTS SET user_amount = user_amount + 1')
+        self.execute('UPDATE PAYMENTS SET user_amount = user_amount + 1 where message_id = ?', (payment_id,))
 
     def get_balance(self, uid) -> float:
         rows = self.fetchall(
