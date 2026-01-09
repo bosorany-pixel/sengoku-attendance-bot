@@ -84,7 +84,7 @@ async def on_message(message: discord.Message):
                 if uid:
                     added_to.append(n)
                     db_worker.link_user_to_payment(uid, active_threads_messages[message.channel.id])
-    message.add_reaction('✅')
+    await message.add_reaction('✅')
 
 
 
