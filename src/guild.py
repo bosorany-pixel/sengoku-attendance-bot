@@ -18,7 +18,7 @@ bot = discord.Client(intents=intents)
 
 async def get_nicks(guild_id: int):
     guild = bot.get_guild(guild_id) or await bot.fetch_guild(guild_id)
-    print(f"{len(guild.members)} мемберов")
+    print(f"{len(guild.members)} мемберов в гильдии {guild.name}")
     for m in guild.members:
         user = db_worker.get_user(m.id)
         if user:
