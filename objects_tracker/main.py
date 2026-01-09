@@ -16,9 +16,9 @@ import os
 import json
 from dotenv import load_dotenv
 
-from commands import add_data, show_data, delete_data, set_allowed_roles, payments
-from commands.add_from_image import add_from_image
-from tasks import cleanup_data
+from objects_tracker.commands import add_data, show_data, delete_data, set_allowed_roles, payments
+from objects_tracker.commands.add_from_image import add_from_image
+from objects_tracker.tasks import cleanup_data
 
 load_dotenv()
 

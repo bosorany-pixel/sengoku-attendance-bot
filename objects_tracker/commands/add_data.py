@@ -1,11 +1,11 @@
 import discord
 from datetime import datetime, timedelta, timezone
 from discord import app_commands
-from utils.data_store import data_lock, save_data, load_data, load_allowed_roles
+from objects_tracker.utils.data_store import data_lock, save_data, load_data, load_allowed_roles
 from typing import List, Optional
 import logging
 import re
-from commands import show_data as show_data_module
+from objects_tracker.commands import show_data as show_data_module
 
 MAINTENANCE_START_UTC = 10
 MAINTENANCE_DURATION_MINUTES = 5

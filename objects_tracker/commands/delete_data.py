@@ -1,8 +1,8 @@
 import discord
 from discord import app_commands
-from utils.data_store import data_lock, save_data, load_data, load_allowed_roles
+from objects_tracker.utils.data_store import data_lock, save_data, load_data, load_allowed_roles
 from typing import List
-from commands import show_data as show_data_module
+from objects_tracker.commands import show_data as show_data_module
 
 @app_commands.command(name="delete_data", description="Удаляет данные об объекте")
 @app_commands.describe(item_to_delete="Выберите объект для удаления")

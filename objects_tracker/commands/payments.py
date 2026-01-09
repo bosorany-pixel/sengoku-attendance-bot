@@ -5,7 +5,7 @@ import discord
 from discord import app_commands
 import json
 from datetime import datetime, timezone, timedelta
-from utils.data_store import load_allowed_roles
+from objects_tracker.utils.data_store import load_allowed_roles
 import io
 import base64
 from src.db_worker import *

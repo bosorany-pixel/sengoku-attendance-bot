@@ -1,6 +1,6 @@
 import discord
 from discord import app_commands
-from utils.data_store import save_allowed_roles
+from objects_tracker.utils.data_store import save_allowed_roles
 from typing import List
 
 

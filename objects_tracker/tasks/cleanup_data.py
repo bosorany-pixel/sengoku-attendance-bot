@@ -2,8 +2,8 @@ import time
 import logging
 import discord
 import os
-from utils.data_store import data_lock, save_data, load_data, show_data_messages
-from commands import show_data as show_data_module
+from objects_tracker.utils.data_store import data_lock, save_data, load_data, show_data_messages
+from objects_tracker.commands import show_data as show_data_module
 
 SIGNALS_DIR = "bot_signals"
 os.makedirs(SIGNALS_DIR, exist_ok=True)
