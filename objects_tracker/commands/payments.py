@@ -146,10 +146,10 @@ async def inc_payment(interaction: discord.Interaction, payment: str, username: 
 
 @app_commands.command(name="dec_payment", description="уменьшить сумму в табличке для мембера")
 @app_commands.describe(
-    fine="Сумма (например '10100000', '3000000' и тд)",
+    payment="Сумма (например '10100000', '3000000' и тд)",
     username="Ник мембера, как в дискорде (например 'kKokSs (не кокос)')"
 )
-async def dec_payment(interaction: discord.Interaction, fine: str, username: str):
+async def dec_payment(interaction: discord.Interaction, payment: str, username: str):
     allowed_role_ids = load_allowed_roles(interaction.guild.id)
     if allowed_role_ids:
         user_role_ids = [role.id for role in interaction.user.roles]
