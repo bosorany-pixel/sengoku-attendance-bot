@@ -3,9 +3,17 @@ import datetime
 import src.datatypes as datatypes
 import os
 import pandas as pd
+
+sql_path = "/mnt/db"
+if os.path.exists("/db"):
+    sql_path = "/db"
+elif not os.path.exists("/mnt/db"):
+    raise "I need a db path"
+
+
 class DBWorker:
     def __init__(self, db_path: str = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
+            sql_path,
             'sengoku_bot.db'
         )):
         self.conn = sqlite3.connect(db_path)
