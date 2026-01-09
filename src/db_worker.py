@@ -227,6 +227,7 @@ VALUES (?, ?, ?, ?, ?)
     ))
         
     def link_user_to_payment(self, uid, payment_id) -> None:
+        print(f"debug {uid} - {payment_id}")
         self.execute('''
 INSERT OR REPLACE INTO PAYMENTS_TO_USERS (ds_uid, message_id)
 VALUES (?, ?)
