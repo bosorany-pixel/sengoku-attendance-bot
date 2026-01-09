@@ -19,6 +19,7 @@ from dotenv import load_dotenv
 from objects_tracker.commands import add_data, show_data, delete_data, set_allowed_roles, payments
 from objects_tracker.commands.add_from_image import add_from_image
 from objects_tracker.tasks import cleanup_data
+from src.guild import get_nicks
 
 load_dotenv()
 
@@ -82,6 +83,8 @@ async def on_ready():
 
     if not cleanup_data_loop.is_running():
         cleanup_data_loop.start()
+
+    await get_nicks(guild_id=os.getenv("DISCORD_GUILD_ID"))
 
     logging.info("Начинаю глобальную синхронизацию команд...")
     try:
