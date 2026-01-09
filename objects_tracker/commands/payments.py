@@ -157,9 +157,9 @@ async def dec_payment(interaction: discord.Interaction, fine: str, username: str
             await interaction.response.send_message("У вас нет прав для добавления данных.", ephemeral=True)
             return
     try:
-        payment = float(payment) * -1
-    except:
-        await interaction.response.send_message("Что-то не так, проверь формат пожалуйста", ephemeral=True)
+        payment = -1 * float(payment)
+    except Exception as e:
+        await interaction.response.send_message(f"Что-то не так, проверь формат пожалуйста\n{e}", ephemeral=True)
         return
     r = _pay_member(float(payment), username, interaction.id, interaction.channel.id, interaction.guild.id)
     if not r:
