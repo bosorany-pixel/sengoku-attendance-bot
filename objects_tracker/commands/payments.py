@@ -10,6 +10,8 @@ import io
 import base64
 from src.db_worker import *
 from src.datatypes import *
+from src.guild import get_nicks
+counter = 1000
 
 db_worker = DBWorker()
 active_threads: dict[int, datetime.datetime] = {}  # thread_id -> deadline_utc
@@ -60,6 +62,10 @@ def _pay_member(payment: float, username: str, msg_id: int, ch_id: int, guild_id
     return None
 
 async def on_message(message: discord.Message):
+    counter += 1
+    if counter >= 1000:
+        await get_nicks(guild_id=os.getenv("DISCORD_GUILD_ID"))
+        counter = 0
     if message.author.bot:
         return
     if not isinstance(message.channel, discord.Thread):

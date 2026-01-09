@@ -48,11 +48,11 @@ async def get_nicks(guild_id: int):
     print(f"{count} мемберов в гильдии {guild.name}")
 
 
-@bot.event
-async def on_ready():
-    print(f"bot ready as {bot.user}")
-    await get_nicks(guild_id=os.getenv("DISCORD_GUILD_ID"))
-    await bot.close()
-
 if __name__ == "__main__":
+    @bot.event
+    async def on_ready():
+        print(f"bot ready as {bot.user}")
+        await get_nicks(guild_id=os.getenv("DISCORD_GUILD_ID"))
+        await bot.close()
+
     bot.run(TOKEN)
