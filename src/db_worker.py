@@ -236,7 +236,7 @@ VALUES (?, ?)
     def get_balance(self, uid) -> float:
         rows = self.fetchall(
             """
-            select p.payment_ammount * 1.0 / p.user_amount
+            select (p.payment_ammount * 1.0) / (p.user_amount * 1.0)
             from PAYMENTS p
             join PAYMENTS_TO_USERS ul on p.message_id = ul.message_id
             where ul.ds_uid = ?
