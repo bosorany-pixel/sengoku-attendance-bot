@@ -110,8 +110,8 @@ async def add_payment(interaction: discord.Interaction, payment: str):
 
 
     msg = await interaction.channel.send(
-        f"💰 Cоздана выплата {payment}кк.\n"
-        f"📝 Кидайте скриншоты пачек в ветку В ТЕЧЕНИЕ ЧАСА (до {time_str} utc)"
+        f"💰 Cоздана выплата {payment:,.2f} серебра.\n"
+        f"📝 Кидайте скриншоты пачек в ветку В ТЕЧЕНИЕ ЧАСА (до {time_str} utc)".replace(",", " ")
     )
     thread = await msg.create_thread(name="скриншоты пачек сюда")
     pm = datatypes.Payment(payment, msg.id, msg.channel.id, msg.guild.id)
@@ -139,7 +139,7 @@ async def inc_payment(interaction: discord.Interaction, payment: str, username: 
         return
     r = _pay_member(float(payment), username, interaction.id, interaction.channel.id, interaction.guild.id)
     if not r:
-        await interaction.response.send_message(f"Добавил {username} {payment} серебра ✅")
+        await interaction.response.send_message(f"Добавил {username} {payment:,.2f} серебра ✅".replace(",", " "))
     else:
         await interaction.response.send_message(f"Что-то пошло не так :с ❌")
     
@@ -163,7 +163,7 @@ async def dec_payment(interaction: discord.Interaction, payment: str, username: 
         return
     r = _pay_member(float(payment), username, interaction.id, interaction.channel.id, interaction.guild.id)
     if not r:
-        await interaction.response.send_message(f"Вычел {username} {payment} серебра ✅")
+        await interaction.response.send_message(f"Вычел {username} {payment:,.2f} серебра ✅".replace(",", " "))
     else:
         await interaction.response.send_message(f"Что-то пошло не так :с ❌")
 
@@ -177,7 +177,7 @@ async def get_balance(interaction: discord.Interaction, username: str):
     if not uid:
         await interaction.response.send_message("Что-то не так, проверь ник пожалуйста", ephemeral=True)
         return
-    await interaction.response.send_message(f"сумма выплаты для {username} = {db_worker.get_balance(uid)}kk")
+    await interaction.response.send_message(f"сумма выплаты для {username} = {db_worker.get_balance(uid):,.2f} серебра".replace(",", " "))
 
 @inc_payment.autocomplete("username")
 async def uname_pay_autocomplete(interaction: discord.Interaction, current: str):
