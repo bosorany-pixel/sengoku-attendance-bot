@@ -104,7 +104,7 @@ async def add_payment(interaction: discord.Interaction, payment: str):
 
     await interaction.response.send_message("Сейчас создам", ephemeral=True)
 
-    deadline = datetime.now(timezone.utc) + timedelta(hours=1)
+    deadline = datetime.datetime.now(timezone.utc) + timedelta(hours=1)
     time_str = deadline.strftime("%Y-%m-%d %H:%M:%S")
 
 
