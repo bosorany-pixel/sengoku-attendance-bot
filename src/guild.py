@@ -8,16 +8,8 @@ import src.datatypes as datatypes
 import src.common as common
 dotenv.load_dotenv()
 
-TOKEN = os.getenv("DISCORD_TOKEN")
-db_worker = dbw.DBWorker()
-
-intents = discord.Intents.default()
-intents.members = True
-
-bot = discord.Client(intents=intents)
-
-async def get_nicks(guild_id: int):
-    guild = bot.get_guild(guild_id) or await bot.fetch_guild(guild_id)
+async def get_nicks(guild_id: int, local_bot: discord.Client):
+    guild = local_bot.get_guild(guild_id) or await local_bot.fetch_guild(guild_id)
 
     count = 0
     async for m in guild.fetch_members(limit=None):
@@ -49,6 +41,13 @@ async def get_nicks(guild_id: int):
 
 
 if __name__ == "__main__":
+    TOKEN = os.getenv("DISCORD_TOKEN")
+    db_worker = dbw.DBWorker()
+
+    intents = discord.Intents.default()
+    intents.members = True
+
+    bot = discord.Client(intents=intents)
     @bot.event
     async def on_ready():
         print(f"bot ready as {bot.user}")
