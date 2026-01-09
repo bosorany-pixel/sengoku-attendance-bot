@@ -1,9 +1,9 @@
 import discord
-import CONSTANTS
-import datatypes
+import src.CONSTANTS as CONSTANTS
+import src.datatypes as datatypes
 import re
 import datetime
-import db_worker as dbw
+import src.db_worker as dbw
 from datetime import date, timedelta
 
 

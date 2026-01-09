@@ -1,6 +1,6 @@
 import sqlite3
 import datetime
-import datatypes
+import src.datatypes as datatypes
 import os
 import pandas as pd
 class DBWorker:
@@ -59,8 +59,27 @@ CREATE TABLE IF NOT EXISTS BRANCH_MESSAGES (
     FOREIGN KEY (parent_message_id) REFERENCES EVENTS(message_id)
 );
 ''')
+        self.cursor.execute('''
+CREATE TABLE IF NOT EXISTS PAYMENTS (
+    payment_ammount REAL,
+    message_id INTEGER PRIMARY KEY,
+    channel_id INTEGER,
+    guild_id INTEGER,
+    pay_time DATETIME,
+    user_amount INTEGER DEFAULT 0
+)
+''')
+        self.cursor.execute('''
+CREATE TABLE IF NOT EXISTS PAYMENTS_TO_USERS (
+    ds_uid INTEGER,
+    message_id INTEGER,
+    PRIMARY KEY (ds_uid, message_id),
+    FOREIGN KEY (ds_uid) REFERENCES USERS(uid),
+    FOREIGN KEY (message_id) REFERENCES EVENTS(message_id)
+)
+''')
 
-    def execute(self, query: str, params: tuple = ()):
+    def execute(self, query: str, params: tuple = (), commit: bool = False):
         self.cursor.execute(query, params)
         self.conn.commit()
         return self.cursor
@@ -112,9 +131,10 @@ INSERT OR REPLACE INTO USERS (
                      need_to_get,
                      is_member,
                      join_date,
-                     roles
+                     roles,
+                     payment
                     )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ''', (
         user.uuid,
         user.server_username,
@@ -125,7 +145,8 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         user.need_to_get,
         user.is_member,
         user.join_date.isoformat() if user.join_date else None,
-        user.roles
+        user.roles,
+        user.payment
     ))
         
     def add_branch_message(self, branch_message: datatypes.BranchMessage, parent_message_id: int):
@@ -177,3 +198,35 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 timeout=row[5]
             )
         return None
+
+    def get_uid_by_name(self, server_name: str) -> datatypes.User | None:
+        uid = self.fetchone("SELECT * FROM USERS WHERE server_username like '%?%'", (server_name,))
+        if uid:
+            return uid[0]
+        else:
+            return None
+
+    def get_server_names(self) -> list[str]:
+        rows = self.fetchall(
+            "select server_username from USERS where server_username != ''"
+        )
+        return [row[0] for row in rows]
+
+    def add_payment(self, payment: datatypes.Payment) -> None:
+        self.execute("""
+INSERT OR REPLACE INTO PAYMENTS (payment_ammount, message_id, channel_id, guild_id, pay_time)
+VALUES (?, ?, ?, ?, ?)
+""", (
+        payment.payment_ammount,
+        payment.message_id,
+        payment.channel_id,
+        payment.guild_id,
+        payment.pay_time
+    ))
+        
+    def link_user_to_payment(self, uid, payment_id) -> None:
+        self.execute('''
+INSERT OR REPLACE INTO PAYMENTS_TO_USERS (ds_uid, message_id)
+VALUES (?, ?)
+''', (uid, payment_id))
+        self.execute('UPDATE PAYMENTS SET user_amount = user_amount + 1')

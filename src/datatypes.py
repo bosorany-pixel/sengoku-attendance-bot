@@ -1,7 +1,7 @@
 import datetime
 import os
 
-from monthly_results import SCRIPT_DIR
+from src.monthly_results import SCRIPT_DIR
 class User:
     uuid: int
     server_username: str
@@ -22,7 +22,8 @@ class User:
                 need_to_get: int = 45,
                 is_member: int = 1,
                 join_date: datetime.datetime = None,
-                roles: str = ""):
+                roles: str = ""
+    ):
         self.uuid = uuid
         self.server_username = server_username
         self.global_username = global_username
@@ -93,6 +94,25 @@ class Event:
         self.hidden = hidden
         self.usefull_event = usefill_event
 
+
+class Payment:
+    payment_ammount: float
+    message_id: int
+    channel_id: int
+    guild_id: int
+    pay_time: datetime.datetime
+    def __init__(
+            self,
+            payment_ammount: float,
+            message_id: int,
+            channel_id: int,
+            guild_id: int
+    ):
+        self.payment_ammount = payment_ammount
+        self.message_id= message_id
+        self.channel_id = channel_id
+        self.guild_id = guild_id
+        self.pay_time = datetime.datetime.now(datetime.timezone.utc)
 
 class Website():
     def __init__(self, SCRIPT_DIR=os.path.dirname(os.path.abspath(__file__)), PM2_WEBSITE_NAME=os.getenv("PM2_WEBSITE_NAME", "sengoku-website")):

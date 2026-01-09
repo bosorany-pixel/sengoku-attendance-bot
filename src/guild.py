@@ -3,9 +3,9 @@ import os
 import discord
 from discord.ext import commands
 import dotenv
-import db_worker as dbw
-import datatypes
-import common
+import src.db_worker as dbw
+import src.datatypes as datatypes
+import src.common as common
 dotenv.load_dotenv()
 
 TOKEN = os.getenv("DISCORD_TOKEN")
