@@ -5,6 +5,7 @@ import discord
 from discord import app_commands
 import json
 from datetime import datetime, timezone, timedelta
+from utils.data_store import load_allowed_roles
 import io
 import base64
 from src.db_worker import *
@@ -89,6 +90,12 @@ async def on_message(message: discord.Message):
 @app_commands.command(name="add_payment", description="создать выплату")
 @app_commands.describe(payment="Сумма выплаты в миллионах, (например '22', '13.6', '32.1')")
 async def add_payment(interaction: discord.Interaction, payment: str):
+    allowed_role_ids = load_allowed_roles(interaction.guild.id)
+    if allowed_role_ids:
+        user_role_ids = [role.id for role in interaction.user.roles]
+        if not any(role_id in allowed_role_ids for role_id in user_role_ids):
+            await interaction.response.send_message("У вас нет прав для добавления данных.", ephemeral=True)
+            return
     try:
         payment = int(payment)
     except:
@@ -117,8 +124,13 @@ async def add_payment(interaction: discord.Interaction, payment: str):
     payment="Сумма выплаты (например '10100000', '3000000' и тд)",
     username="Ник мембера, как в дискорде (например 'kKokSs (не кокос)')"
 )
-@app_commands.default_permissions(administrator=True)
 async def inc_payment(interaction: discord.Interaction, payment: str, username: str):
+    allowed_role_ids = load_allowed_roles(interaction.guild.id)
+    if allowed_role_ids:
+        user_role_ids = [role.id for role in interaction.user.roles]
+        if not any(role_id in allowed_role_ids for role_id in user_role_ids):
+            await interaction.response.send_message("У вас нет прав для добавления данных.", ephemeral=True)
+            return
     try:
         payment = float(payment)
     except:
@@ -131,13 +143,18 @@ async def inc_payment(interaction: discord.Interaction, payment: str, username: 
         interaction.response.send_message(f"Что-то пошло не так :с ❌")
     
 
-@app_commands.command(name="fine_member", description="уменьшить сумму в табличке для мембера")
+@app_commands.command(name="dec_payment", description="уменьшить сумму в табличке для мембера")
 @app_commands.describe(
     fine="Сумма (например '10100000', '3000000' и тд)",
     username="Ник мембера, как в дискорде (например 'kKokSs (не кокос)')"
 )
-@app_commands.default_permissions(administrator=True)
-async def fine_member(interaction: discord.Interaction, fine: str, username: str):
+async def dec_payment(interaction: discord.Interaction, fine: str, username: str):
+    allowed_role_ids = load_allowed_roles(interaction.guild.id)
+    if allowed_role_ids:
+        user_role_ids = [role.id for role in interaction.user.roles]
+        if not any(role_id in allowed_role_ids for role_id in user_role_ids):
+            await interaction.response.send_message("У вас нет прав для добавления данных.", ephemeral=True)
+            return
     try:
         payment = float(payment) * -1
     except:
@@ -148,6 +165,18 @@ async def fine_member(interaction: discord.Interaction, fine: str, username: str
         interaction.response.send_message(f"Вычел {username} {payment} серебра ✅")
     else:
         interaction.response.send_message(f"Что-то пошло не так :с ❌")
+
+
+@app_commands.command(name="get_balance", description="посмотреть баланс мембера")
+@app_commands.describe(
+    username="Ник мембера, как в дискорде (например 'kKokSs (не кокос)')"
+)
+async def get_balance(interaction: discord.Interaction, username: str):
+    uid = db_worker.get_uid_by_name(username)
+    if not uid:
+        await interaction.response.send_message("Что-то не так, проверь ник пожалуйста", ephemeral=True)
+        return
+    await interaction.response.send_message(f"сумма выплаты для {username} = {db_worker.get_balance(uid):,.0f}".replace(",", " "))
 
 @inc_payment.autocomplete("username")
 async def uname_pay_autocomplete(interaction: discord.Interaction, current: str):
@@ -160,8 +189,19 @@ async def uname_pay_autocomplete(interaction: discord.Interaction, current: str)
     choices.sort(key=lambda c: (not c.name.lower().startswith(current_lower), c.name.lower()))
     return choices[:25]
 
-@fine_member.autocomplete("username")
+@dec_payment.autocomplete("username")
 async def uname_fine_autocomplete(interaction: discord.Interaction, current: str):
+    current_lower = current.lower()
+    choices = [
+        app_commands.Choice(name=uname, value=uname)
+        for uname in db_worker.get_server_names()
+        if current_lower in uname.lower()
+    ]
+    choices.sort(key=lambda c: (not c.name.lower().startswith(current_lower), c.name.lower()))
+    return choices[:25]
+
+@get_balance.autocomplete("username")
+async def uname_get_autocomplete(interaction: discord.Interaction, current: str):
     current_lower = current.lower()
     choices = [
         app_commands.Choice(name=uname, value=uname)

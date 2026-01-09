@@ -131,10 +131,9 @@ INSERT OR REPLACE INTO USERS (
                      need_to_get,
                      is_member,
                      join_date,
-                     roles,
-                     payment
+                     roles
                     )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ''', (
         user.uuid,
         user.server_username,
@@ -230,3 +229,15 @@ INSERT OR REPLACE INTO PAYMENTS_TO_USERS (ds_uid, message_id)
 VALUES (?, ?)
 ''', (uid, payment_id))
         self.execute('UPDATE PAYMENTS SET user_amount = user_amount + 1')
+
+    def get_balance(self, uid) -> int:
+        rows = self.fetchall(
+            """
+            select p.payment_ammount / p.user_amount as pay
+            from PAYMENTS p
+            join PAYMENTS_TO_USERS ul on p.message_id = ul.message_id
+            where ul.uid = ?
+            """,
+            (uid,)
+        )
+        return sum(row[0] for row in rows if row[0] is not None)

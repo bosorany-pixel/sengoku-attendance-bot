@@ -38,11 +38,6 @@ async def _internal_add_item(
     user_selected_location = location.strip()
     user_selected_object_name = object_name.strip()
 
-    allowed_role_ids = load_allowed_roles(guild_id)
-    if allowed_role_ids:
-        user_role_ids = [role.id for role in interaction.user.roles]
-        if not any(role_id in allowed_role_ids for role_id in user_role_ids):
-            return "У вас нет прав для добавления данных."
     if len(time_str) != 0:
         try:
             processed_time_str = time_str.lower().replace(' ', '')
