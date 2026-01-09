@@ -136,7 +136,7 @@ async def inc_payment(interaction: discord.Interaction, payment: str, username: 
     except:
         await interaction.response.send_message("Что-то не так, проверь формат пожалуйста", ephemeral=True)
         return
-    r = _pay_member(float(payment), username, interaction.id, interaction.user.id)
+    r = _pay_member(float(payment), username, interaction.id, interaction.channel.id, interaction.guild.id)
     if not r:
         interaction.response.send_message(f"Добавил {username} {payment} серебра ✅")
     else:
@@ -160,7 +160,7 @@ async def dec_payment(interaction: discord.Interaction, fine: str, username: str
     except:
         await interaction.response.send_message("Что-то не так, проверь формат пожалуйста", ephemeral=True)
         return
-    r = _pay_member(float(payment), username, interaction.id, interaction.user.id)
+    r = _pay_member(float(payment), username, interaction.id, interaction.channel.id, interaction.guild.id)
     if not r:
         interaction.response.send_message(f"Вычел {username} {payment} серебра ✅")
     else:

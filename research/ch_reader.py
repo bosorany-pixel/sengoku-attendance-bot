@@ -5,7 +5,7 @@ import dotenv
 
 dotenv.load_dotenv()
 
-TOKEN = os.getenv("DISCORD_TOKEN")
+TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 
 intents = discord.Intents.none()
 intents.guilds = True  # чтобы видеть список каналов
