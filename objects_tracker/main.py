@@ -58,6 +58,7 @@ bot.tree.add_command(set_allowed_roles.set_allowed_roles)
 bot.tree.add_command(payments.add_payment)
 bot.tree.add_command(payments.inc_payment)
 bot.tree.add_command(payments.dec_payment)
+bot.tree.add_command(payments.get_balance)
 bot.tree.add_command(add_from_image)
 
 @tasks.loop(minutes=1)

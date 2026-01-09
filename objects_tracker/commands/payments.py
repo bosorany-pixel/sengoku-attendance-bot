@@ -138,9 +138,9 @@ async def inc_payment(interaction: discord.Interaction, payment: str, username: 
         return
     r = _pay_member(float(payment), username, interaction.id, interaction.channel.id, interaction.guild.id)
     if not r:
-        interaction.response.send_message(f"Добавил {username} {payment} серебра ✅")
+        await interaction.response.send_message(f"Добавил {username} {payment} серебра ✅")
     else:
-        interaction.response.send_message(f"Что-то пошло не так :с ❌")
+        await interaction.response.send_message(f"Что-то пошло не так :с ❌")
     
 
 @app_commands.command(name="dec_payment", description="уменьшить сумму в табличке для мембера")
@@ -162,9 +162,9 @@ async def dec_payment(interaction: discord.Interaction, fine: str, username: str
         return
     r = _pay_member(float(payment), username, interaction.id, interaction.channel.id, interaction.guild.id)
     if not r:
-        interaction.response.send_message(f"Вычел {username} {payment} серебра ✅")
+        await interaction.response.send_message(f"Вычел {username} {payment} серебра ✅")
     else:
-        interaction.response.send_message(f"Что-то пошло не так :с ❌")
+        await interaction.response.send_message(f"Что-то пошло не так :с ❌")
 
 
 @app_commands.command(name="get_balance", description="посмотреть баланс мембера")
