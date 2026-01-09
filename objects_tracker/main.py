@@ -60,6 +60,7 @@ bot.tree.add_command(payments.inc_payment)
 bot.tree.add_command(payments.dec_payment)
 bot.tree.add_command(payments.get_balance)
 bot.tree.add_command(add_from_image)
+bot.add_listener(payments.on_message, name="on_message")
 
 @tasks.loop(minutes=1)
 async def cleanup_data_loop():
