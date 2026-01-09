@@ -78,7 +78,7 @@ async def on_message(message: discord.Message):
     for att in message.attachments:
         ct = att.content_type or ""
         if ct.startswith("image/"):
-            names = _get_names_from_image(att)
+            names = await _get_names_from_image(att)
             for n in names:
                 uid = db_worker.get_uid_by_name(n)
                 if uid:
