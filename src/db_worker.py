@@ -144,8 +144,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         user.need_to_get,
         user.is_member,
         user.join_date.isoformat() if user.join_date else None,
-        user.roles,
-        user.payment
+        user.roles
     ))
         
     def add_branch_message(self, branch_message: datatypes.BranchMessage, parent_message_id: int):
