@@ -34,7 +34,7 @@ async def on_attendance_message(message: discord.Message):
                 uid = db_worker.get_uid_by_name(n)
                 if uid:
                     added_to.append(n)
-                    db_worker.add_event_user_link(uid, att_tread_to_messages[message.thread.id])
+                    db_worker.add_event_user_link(uid, att_tread_to_messages[message.channel.id])
     await message.add_reaction('✏️')
     await message.reply(", ".join(added_to))
 
