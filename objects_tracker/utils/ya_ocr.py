@@ -43,5 +43,6 @@ async def _get_names_from_image(image: discord.Attachment) -> list:
     except Exception as e:
             logging.error(str(e))
             return
+    print(f"recognized text {objects_text}")
     return objects_text.split('\n')
 

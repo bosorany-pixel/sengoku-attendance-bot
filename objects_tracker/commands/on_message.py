@@ -17,7 +17,7 @@ async def on_message(message: discord.Message, bot: discord.Client):
     now = datetime.datetime.now(datetime.timezone.utc)
     if now - last_update > datetime.timedelta(minutes=10):
         try:
-            await get_nicks(guild_id=os.getenv("DISCORD_GUILD_ID"), bot=bot)
+            await get_nicks(guild_id=os.getenv("DISCORD_GUILD_ID"), local_bot=bot)
         finally:
             last_update = now
 
@@ -39,7 +39,7 @@ async def on_message(message: discord.Message, bot: discord.Client):
         res = consumer(message)
         if inspect.isawaitable(res):
             await res
-        await message.add_reaction("✅")
+        # await message.add_reaction("✅")
     except Exception:
         try:
             await message.add_reaction("❌")

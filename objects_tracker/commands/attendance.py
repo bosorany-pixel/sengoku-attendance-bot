@@ -36,8 +36,10 @@ async def on_attendance_message(message: discord.Message):
                     added_to.append(n)
                     db_worker.add_event_user_link(uid, att_tread_to_messages[message.channel.id])
     await message.add_reaction('✏️')
-    await message.reply(", ".join(added_to))
-
+    if len(added_to) > 0:
+        await message.reply(", ".join(added_to))
+    else:
+        await message.reply('Не вижу тут ников...')
     
 @app_commands.command(name="create_attendance", description="создать посещение")
 @app_commands.describe(att_name="Название контента, например 'zvz 10.01 12 utc'")
