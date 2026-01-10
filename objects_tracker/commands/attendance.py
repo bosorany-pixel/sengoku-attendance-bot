@@ -56,6 +56,7 @@ async def create_attendance(interaction: discord.Interaction, att_name: str):
 
     msg = await interaction.channel.send(
         f"👪 {att_name}.\n"
+        f"😎 коллер {interaction.user.name}\n"
         f"📝 Кидайте скриншоты пачек в ветку В ТЕЧЕНИЕ ЧАСА (до {time_str} utc)".replace(",", " ")
     )
     thread = await msg.create_thread(name="скриншоты пачек сюда")
