@@ -40,9 +40,9 @@ async def _get_names_from_image(image: discord.Attachment) -> list:
             objects_text = dict(json.loads(w.text))['result']['textAnnotation']['fullText']
         else:
             objects_text = ""
+        logging.info(f"recognized text {objects_text}")
     except Exception as e:
             logging.error(str(e))
             return
-    print(f"recognized text {objects_text}")
     return objects_text.split('\n')
 
