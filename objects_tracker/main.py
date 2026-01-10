@@ -52,6 +52,9 @@ bot = commands.Bot(
     help_command=None
 )
 
+async def _on_message_wrapper(message: discord.Message):
+    await payments.on_message(message, bot)
+
 bot.tree.add_command(add_data.add_data)
 bot.tree.add_command(show_data.show_data)
 bot.tree.add_command(delete_data.delete_data)
@@ -61,10 +64,7 @@ bot.tree.add_command(payments.inc_payment)
 bot.tree.add_command(payments.dec_payment)
 bot.tree.add_command(payments.get_balance)
 bot.tree.add_command(add_from_image)
-bot.add_listener(
-    lambda message: payments.on_message(message, bot),
-    name="on_message"
-)
+bot.add_listener(_on_message_wrapper, name="on_message")
 
 
 @tasks.loop(minutes=1)
