@@ -16,8 +16,9 @@ import os
 import json
 from dotenv import load_dotenv
 
-from objects_tracker.commands import add_data, show_data, delete_data, set_allowed_roles, payments
+from objects_tracker.commands import add_data, show_data, delete_data, set_allowed_roles, payments, attendance
 from objects_tracker.commands.add_from_image import add_from_image
+from objects_tracker.commands import on_message
 from objects_tracker.tasks import cleanup_data
 from src.guild import get_nicks
 
@@ -53,7 +54,7 @@ bot = commands.Bot(
 )
 
 async def _on_message_wrapper(message: discord.Message):
-    await payments.on_message(message, bot)
+    await on_message.on_message(message, bot)
 
 bot.tree.add_command(add_data.add_data)
 bot.tree.add_command(show_data.show_data)
@@ -64,6 +65,7 @@ bot.tree.add_command(payments.inc_payment)
 bot.tree.add_command(payments.dec_payment)
 bot.tree.add_command(payments.get_balance)
 bot.tree.add_command(payments.top_balance)
+bot.tree.add_command(attendance.create_attendance)
 bot.tree.add_command(add_from_image)
 bot.add_listener(_on_message_wrapper, name="on_message")
 

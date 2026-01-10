@@ -1,56 +1,15 @@
-from PIL import Image
-import logging
-import requests
 import discord
 from discord import app_commands
-import json
 from datetime import datetime, timezone, timedelta
 from objects_tracker.utils.data_store import load_allowed_roles
-import io
-import base64
 from src.db_worker import *
 from src.datatypes import *
-from src.guild import get_nicks
-counter = 1000
+from objects_tracker.commands.on_message import add_consumer, remove_consumer
+from objects_tracker.utils.ya_ocr import _get_names_from_image
 
 db_worker = DBWorker()
-active_threads: dict[int, datetime.datetime] = {}  # thread_id -> deadline_utc
-active_threads_messages: dict[int, int] = {} # thread_id -> payment_id
-
-async def _get_names_from_image(image: discord.Attachment) -> list:
-    image_bytes = await image.read()
-    img = Image.open(io.BytesIO(image_bytes))
-    buffered = io.BytesIO()
-    img.save(buffered, format="JPEG")
-    image_bytes = buffered.getvalue()
-    content = base64.b64encode(image_bytes).decode("ascii")
-    body = {
-            "mimeType": "jpg",
-            "languageCodes": ["ru", "en"],
-            "content": content
-        }
-
-    headers= {"Content-Type": "application/json",
-        "Authorization": "Api-Key {:s}".format(os.getenv("YANDEX_API_KEY")),
-        "x-folder-id": "b1g9o81kme3o99o6bh0f",
-        "x-data-logging-enabled": "true"}
-    
-    w = requests.post(
-        url="https://ocr.api.cloud.yandex.net/ocr/v1/recognizeText", 
-        headers=headers,
-        data=json.dumps(body)
-    )
-    objects_text = ''
-    try:
-        if 'result' in dict(json.loads(w.text)):
-            objects_text = dict(json.loads(w.text))['result']['textAnnotation']['fullText']
-        else:
-            objects_text = ""
-    except Exception as e:
-            logging.error(str(e))
-            return
-    return objects_text.split('\n')
-
+payment_threads: dict[int, datetime.datetime] = {}  # thread_id -> deadline_utc
+payment_tread_to_messages: dict[int, int] = {} # thread_id -> payment_id
 
 def _pay_member(payment: float, username: str, msg_id: int, ch_id: int, guild_id: int) -> str:
     uid = db_worker.get_uid_by_name(username)
@@ -61,23 +20,15 @@ def _pay_member(payment: float, username: str, msg_id: int, ch_id: int, guild_id
     db_worker.link_user_to_payment(uid, msg_id)
     return None
 
-async def on_message(message: discord.Message, bot: discord.Client):
-    global counter
-    counter += 1
-    if counter >= 1000:
-        await get_nicks(guild_id=os.getenv("DISCORD_GUILD_ID"), bot=bot)
-        counter = 0
-    if message.author.bot:
-        return
-    if not isinstance(message.channel, discord.Thread):
-        return
-    deadline = active_threads.get(message.channel.id)
+async def on_payment_message(message: discord.Message):
+    deadline = payment_threads.get(message.channel.id)
     if not deadline:
         return
     now = datetime.datetime.now(timezone.utc)
     if now > deadline:
-        active_threads.pop(message.channel.id, None)
-        active_threads_messages.pop(message.channel.id, None)
+        payment_threads.pop(message.channel.id, None)
+        payment_tread_to_messages.pop(message.channel.id, None)
+        remove_consumer(message.channel.id)
         return
     if not message.attachments:
         return
@@ -90,8 +41,9 @@ async def on_message(message: discord.Message, bot: discord.Client):
                 uid = db_worker.get_uid_by_name(n)
                 if uid:
                     added_to.append(n)
-                    db_worker.link_user_to_payment(uid, active_threads_messages[message.channel.id])
-    await message.add_reaction('✅')
+                    db_worker.link_user_to_payment(uid, payment_tread_to_messages[message.channel.id])
+    await message.add_reaction('💵')
+    await message.reply(", ".join(added_to))
 
 
 
@@ -124,8 +76,9 @@ async def add_payment(interaction: discord.Interaction, payment: str):
     pm = datatypes.Payment(payment, msg.id, msg.channel.id, msg.guild.id)
     db_worker.add_payment(pm)
 
-    active_threads[thread.id] = deadline
-    active_threads_messages[thread.id] = msg.id
+    payment_threads[thread.id] = deadline
+    payment_tread_to_messages[thread.id] = msg.id
+    add_consumer(thread.id, on_payment_message)
 
 @app_commands.command(name="inc_payment", description="увеличить сумму в табличке для мембера")
 @app_commands.describe(
