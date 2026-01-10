@@ -94,3 +94,14 @@ async def add_attendense(interaction: discord.Interaction, username: str):
         interaction.response.send_message(f"Добавил посещение для {username} ✅")
     else:
         interaction.response.send_message("Кажется, ветка записи уже закрыта", ephemeral=True)
+
+@add_attendense.autocomplete("username")
+async def uname_get_autocomplete(interaction: discord.Interaction, current: str):
+    current_lower = current.lower()
+    choices = [
+        app_commands.Choice(name=uname, value=uname)
+        for uname in db_worker.get_server_names()
+        if current_lower in uname.lower()
+    ]
+    choices.sort(key=lambda c: (not c.name.lower().startswith(current_lower), c.name.lower()))
+    return choices[:25]
