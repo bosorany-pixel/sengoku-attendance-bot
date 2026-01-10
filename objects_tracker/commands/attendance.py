@@ -81,7 +81,7 @@ async def create_attendance(interaction: discord.Interaction, att_name: str):
 @app_commands.describe(
     username="Ник мембера, как в дискорде (например 'kKokSs (не кокос)')"
 )
-async def dec_payment(interaction: discord.Interaction, username: str):
+async def add_attendense(interaction: discord.Interaction, username: str):
     allowed_role_ids = load_allowed_roles(interaction.guild.id, "core_roles")
     if allowed_role_ids:
         user_role_ids = [role.id for role in interaction.user.roles]

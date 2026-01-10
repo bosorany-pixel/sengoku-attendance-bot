@@ -66,6 +66,7 @@ bot.tree.add_command(payments.dec_payment)
 bot.tree.add_command(payments.get_balance)
 bot.tree.add_command(payments.top_balance)
 bot.tree.add_command(attendance.create_attendance)
+bot.tree.add_command(attendance.add_attendense)
 bot.tree.add_command(add_from_image)
 bot.add_listener(_on_message_wrapper, name="on_message")
 
