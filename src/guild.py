@@ -8,6 +8,8 @@ import src.datatypes as datatypes
 import src.common as common
 dotenv.load_dotenv()
 
+db_worker = dbw.DBWorker()
+
 async def get_nicks(guild_id: int, local_bot: discord.Client):
     guild = local_bot.get_guild(guild_id) or await local_bot.fetch_guild(guild_id)
 
@@ -42,8 +44,6 @@ async def get_nicks(guild_id: int, local_bot: discord.Client):
 
 if __name__ == "__main__":
     TOKEN = os.getenv("DISCORD_TOKEN")
-    db_worker = dbw.DBWorker()
-
     intents = discord.Intents.default()
     intents.members = True
 
