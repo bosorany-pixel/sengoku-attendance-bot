@@ -258,13 +258,18 @@ VALUES (?, ?)
 
     def get_top_users(self, top_n: int) -> list[tuple]:
         return self.fetchall(
-            """"select select (p.payment_ammount * 1.0) / (p.user_amount * 1.0),
-            COALESCE(NULLIF(u.server_username, ''), u.global_username) AS display_name
-            from PAYMENTS p
-            join PAYMENTS_TO_USERS ul on p.message_id = ul.message_id
-            join USERS u on u.uid = ul.ds_uid
-            limit ?
-            """, (top_n,)
+            """
+            SELECT
+                COALESCE(NULLIF(u.server_username, ''), u.global_username) AS display_name,
+                SUM((p.payment_ammount * 1.0) / NULLIF(p.user_amount * 1.0, 0)) AS total_amount
+            FROM PAYMENTS p
+            JOIN PAYMENTS_TO_USERS ul ON p.message_id = ul.message_id
+            JOIN USERS u ON u.uid = ul.ds_uid
+            GROUP BY u.uid, display_name
+            ORDER BY total_amount DESC
+            LIMIT ?
+            """,
+            (top_n,),
         )
     
 
