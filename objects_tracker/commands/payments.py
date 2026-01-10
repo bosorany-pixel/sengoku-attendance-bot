@@ -191,7 +191,7 @@ async def get_balance(interaction: discord.Interaction, username: str):
 @app_commands.describe(
     top_n="топ сколько вам надо (например '3', '5' и тд)"
 )
-async def get_balance(interaction: discord.Interaction, top_n: str):
+async def top_balance(interaction: discord.Interaction, top_n: str):
     try:
         top_n = int(top_n)
     except Exception as e:
