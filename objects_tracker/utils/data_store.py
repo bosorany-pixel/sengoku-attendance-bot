@@ -64,7 +64,8 @@ def load_data(guild_id: Any) -> Dict[str, List[Any]]:
 
 def save_data(guild_id: Any, data_items: List[Dict[str, Any]], allowed_roles: List[int], allowed_key: str = "allowed_roles"):
     data_file = get_data_file_path(guild_id)
-    data_to_save = {"items": data_items, allowed_key: allowed_roles}
+    data_to_save = {"items": data_items, "allowed_roles": []}
+    data_to_save[allowed_key] = allowed_roles
     try:
         with open(data_file, "w", encoding="utf-8") as f:
             json.dump(data_to_save, f, indent=4)
