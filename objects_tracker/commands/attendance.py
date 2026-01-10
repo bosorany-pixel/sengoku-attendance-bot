@@ -91,9 +91,9 @@ async def add_attendense(interaction: discord.Interaction, username: str):
     uid = db_worker.get_uid_by_name(username)
     if uid and interaction.channel.id in att_tread_to_messages:
         db_worker.add_event_user_link(uid, att_tread_to_messages[interaction.channel.id])
-        interaction.response.send_message(f"Добавил посещение для {username} ✅")
+        await interaction.response.send_message(f"Добавил посещение для {username} ✅")
     else:
-        interaction.response.send_message("Кажется, ветка записи уже закрыта", ephemeral=True)
+        await interaction.response.send_message("Кажется, ветка записи уже закрыта", ephemeral=True)
 
 @add_attendense.autocomplete("username")
 async def uname_get_autocomplete(interaction: discord.Interaction, current: str):
