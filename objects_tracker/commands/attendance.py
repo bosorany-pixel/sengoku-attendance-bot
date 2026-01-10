@@ -36,10 +36,8 @@ async def on_attendance_message(message: discord.Message):
                     added_to.append(n)
                     db_worker.add_event_user_link(uid, att_tread_to_messages[message.channel.id])
     await message.add_reaction('✏️')
-    if len(added_to) > 0:
-        await message.reply(", ".join(added_to))
-    else:
-        await message.reply('Не вижу тут ников...')
+    await message.reply(", ".join(added_to))
+
     
 @app_commands.command(name="create_attendance", description="создать посещение")
 @app_commands.describe(att_name="Название контента, например 'zvz 10.01 12 utc'")
@@ -78,3 +76,21 @@ async def create_attendance(interaction: discord.Interaction, att_name: str):
     att_threads[thread.id] = deadline
     att_tread_to_messages[thread.id] = msg.id
     add_consumer(thread.id, on_attendance_message)
+
+@app_commands.command(name="add_attendense", description="добавить посещение мемберу. можно использовать только в ветке посещения, которое не было учтено")
+@app_commands.describe(
+    username="Ник мембера, как в дискорде (например 'kKokSs (не кокос)')"
+)
+async def dec_payment(interaction: discord.Interaction, username: str):
+    allowed_role_ids = load_allowed_roles(interaction.guild.id, "core_roles")
+    if allowed_role_ids:
+        user_role_ids = [role.id for role in interaction.user.roles]
+        if not any(role_id in allowed_role_ids for role_id in user_role_ids):
+            await interaction.response.send_message("У вас нет прав для добавления данных.", ephemeral=True)
+            return
+    uid = db_worker.get_uid_by_name(username)
+    if uid and interaction.channel.id in att_tread_to_messages:
+        db_worker.add_event_user_link(uid, att_tread_to_messages[interaction.channel.id])
+        interaction.response.send_message(f"Добавил посещение для {username} ✅")
+    else:
+        interaction.response.send_message("Кажется, ветка записи уже закрыта", ephemeral=True)

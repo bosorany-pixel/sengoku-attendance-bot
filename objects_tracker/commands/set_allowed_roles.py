@@ -5,9 +5,9 @@ from typing import List
 
 
 @app_commands.command(name="set_allowed_roles", description="Управляет ролями для команд добавления/удаления.")
-@app_commands.describe(roles="Выберите роли. Если не выбрано, список будет очищен.")
+@app_commands.describe(roles="Выберите роли. Если не выбрано, список будет очищен.", allowed_key="key")
 @app_commands.default_permissions(administrator=True)
-async def set_allowed_roles(interaction: discord.Interaction, roles: str = None):
+async def set_allowed_roles(interaction: discord.Interaction, roles: str = None, allowed_key: str = "allowed_roles"):
     guild_id = interaction.guild_id
     if not guild_id: return
 
@@ -20,7 +20,7 @@ async def set_allowed_roles(interaction: discord.Interaction, roles: str = None)
     selected_roles = [interaction.guild.get_role(r_id) for r_id in role_ids]
     valid_roles = [r for r in selected_roles if r]
 
-    save_allowed_roles(guild_id, [r.id for r in valid_roles])
+    save_allowed_roles(guild_id, [r.id for r in valid_roles], allowed_key)
     await interaction.response.send_message(
         f"Установлены разрешенные роли: {', '.join([r.name for r in valid_roles]) if valid_roles else 'Список пуст'}.",
         ephemeral=True

@@ -62,20 +62,20 @@ def load_data(guild_id: Any) -> Dict[str, List[Any]]:
         logging.error(f"Ошибка при загрузке данных из {data_file}: {e}. Используется структура по умолчанию.")
         return default_structure
 
-def save_data(guild_id: Any, data_items: List[Dict[str, Any]], allowed_roles: List[int]):
+def save_data(guild_id: Any, data_items: List[Dict[str, Any]], allowed_roles: List[int], allowed_key: str = "allowed_roles"):
     data_file = get_data_file_path(guild_id)
-    data_to_save = {"items": data_items, "allowed_roles": allowed_roles}
+    data_to_save = {"items": data_items, allowed_key: allowed_roles}
     try:
         with open(data_file, "w", encoding="utf-8") as f:
             json.dump(data_to_save, f, indent=4)
     except IOError as e:
         logging.error(f"Ошибка ввода-вывода при сохранении данных в {data_file}: {e}")
 
-def save_allowed_roles(guild_id: Any, allowed_role_ids: List[int]):
+def save_allowed_roles(guild_id: Any, allowed_role_ids: List[int], allowed_key: str = "allowed_roles"):
     current_data = load_data(guild_id)
-    save_data(guild_id, current_data.get("items", []), allowed_role_ids)
+    save_data(guild_id, current_data.get("items", []), allowed_role_ids, allowed_key)
     logging.info(f"Разрешенные роли для guild {guild_id} обновлены.")
 
-def load_allowed_roles(guild_id: Any) -> List[int]:
+def load_allowed_roles(guild_id: Any, allowed_key: str = "allowed_roles") -> List[int]:
     data = load_data(guild_id)
-    return data.get("allowed_roles", [])
+    return data.get(allowed_key, [])

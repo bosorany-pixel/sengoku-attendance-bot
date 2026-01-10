@@ -80,6 +80,7 @@ async def add_payment(interaction: discord.Interaction, payment: str):
     payment_tread_to_messages[thread.id] = msg.id
     add_consumer(thread.id, on_payment_message)
 
+
 @app_commands.command(name="inc_payment", description="увеличить сумму в табличке для мембера")
 @app_commands.describe(
     payment="Сумма выплаты (например '10100000', '3000000' и тд)",
