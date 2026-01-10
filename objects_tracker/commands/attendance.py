@@ -74,4 +74,4 @@ async def create_attendance(interaction: discord.Interaction, att_name: str):
 
     att_threads[thread.id] = deadline
     att_tread_to_messages[thread.id] = msg.id
-    add_consumer(on_attendance_message)
+    add_consumer(thread.id, on_attendance_message)
