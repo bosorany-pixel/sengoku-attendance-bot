@@ -254,3 +254,44 @@ VALUES (?, ?)
         )
         print(rows)
         return round(sum(row[0] for row in rows if row[0] is not None), 3)
+
+
+    def get_top_users(self, top_n: int) -> list[tuple]:
+        return self.fetchall(
+            """"select select (p.payment_ammount * 1.0) / (p.user_amount * 1.0),
+            COALESCE(NULLIF(u.server_username, ''), u.global_username) AS display_name
+            from PAYMENTS p
+            join PAYMENTS_TO_USERS ul on p.message_id = ul.message_id
+            join USERS u on u.uid = ul.ds_uid
+            limit ?
+            """, (top_n,)
+        )
+    
+
+def format_sqlite_rows(rows, headers=None, max_rows=20):
+    if not rows:
+        return "пусто. совсем."
+
+    rows = rows[:max_rows]
+
+    if headers:
+        rows = [headers] + list(rows)
+
+    cols = list(zip(*rows))
+    widths = [max(len(str(cell)) for cell in col) for col in cols]
+
+    lines = []
+    for i, row in enumerate(rows):
+        line = " | ".join(
+            str(cell).ljust(widths[idx])
+            for idx, cell in enumerate(row)
+        )
+        if headers and i == 0:
+            sep = "-+-".join("-" * w for w in widths)
+            lines.append(line)
+            lines.append(sep)
+        else:
+            lines.append(line)
+
+    result = "```\n" + "\n".join(lines) + "\n```"
+    return result

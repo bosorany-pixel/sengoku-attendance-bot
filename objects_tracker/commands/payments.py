@@ -186,6 +186,23 @@ async def get_balance(interaction: discord.Interaction, username: str):
         return
     await interaction.response.send_message(f"сумма выплаты для {username} = {db_worker.get_balance(uid):,.2f} серебра".replace(",", " "))
 
+
+@app_commands.command(name="top_balance", description="топ балансов гильдии")
+@app_commands.describe(
+    top_n="топ сколько вам надо (например '3', '5' и тд)"
+)
+async def get_balance(interaction: discord.Interaction, top_n: str):
+    try:
+        top_n = int(top_n)
+    except Exception as e:
+        await interaction.response.send_message(str(e), ephemeral=True)
+    if top_n > 20:
+        await interaction.response.send_message("НЕМАЛО", ephemeral=True)
+    await interaction.response.send_message(
+        format_sqlite_rows(db_worker.get_top_users(top_n))
+    )
+
+
 @inc_payment.autocomplete("username")
 async def uname_pay_autocomplete(interaction: discord.Interaction, current: str):
     current_lower = current.lower()
