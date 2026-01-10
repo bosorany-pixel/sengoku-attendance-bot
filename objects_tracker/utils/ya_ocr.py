@@ -12,6 +12,8 @@ dotenv.load_dotenv()
 async def _get_names_from_image(image: discord.Attachment) -> list:
     image_bytes = await image.read()
     img = Image.open(io.BytesIO(image_bytes))
+    if img.mode == 'RGBA':
+        img = img.convert('RGB')
     buffered = io.BytesIO()
     img.save(buffered, format="JPEG")
     image_bytes = buffered.getvalue()
