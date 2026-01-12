@@ -197,8 +197,8 @@ def user_detail(uid):
     return render_template_string(BASE_HTML, title=f"{user['display_name'] or 'без имени'}", subtitle=subtitle, content=html, archives=archives, db_param=db_param)
 
 
-@app.route('/user/<int:uid>')
-def user_detail(uid):
+@app.route('/payment/<int:uid>')
+def payment_detail(uid):
     db_param = request.args.get('db')
     db_path = None
     history_title = None
