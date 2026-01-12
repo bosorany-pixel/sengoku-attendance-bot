@@ -128,8 +128,6 @@ def index():
             display_name COLLATE NOCASE ASC;
     """)
     rows = q.fetchall()
-    for i in range(len(rows)):
-        rows[i]['total_amount'] = f"{rows[i]['total_amount']:,.2f}".replace(",", ' ')
     
     archives = get_archives()
     
