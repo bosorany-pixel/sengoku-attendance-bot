@@ -10,7 +10,7 @@
   </tr>
   {% for e in events %}
     <tr>
-      <td>{{ (e['payment_ammount'] or '-') }}</td>
+      <td>{{ e['payment_ammount'] | money }}</td>
       <td>{{ e['user_ammount'] or '—' }}</td>
       <td>{{ e['payment_sum'] or '—' }}</td>
       <td>{{ e['pay_time'] or '—' }}</td>
