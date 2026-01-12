@@ -123,7 +123,7 @@ LEFT JOIN (
 LEFT JOIN (
     SELECT
         ul.ds_uid AS uid,
-        SUM((p.payment_ammount * 1.0) / NULLIF(p.user_amount * 1.0, 0)) AS total_amount
+        ROUND(SUM((p.payment_ammount * 1.0) / NULLIF(p.user_amount * 1.0, 0)), 2) AS total_amount
     FROM PAYMENTS p
     JOIN PAYMENTS_TO_USERS ul ON p.message_id = ul.message_id
     GROUP BY ul.ds_uid
@@ -216,7 +216,7 @@ def payment_detail(uid):
     if not user:
         abort(404)
     eq = db.execute("""
-            select (p.payment_ammount * 1.0) / (p.user_amount * 1.0) as payment_sum, p.message_id, p.channel_id, p.guild_id, p.payment_ammount, p.user_amount, p.pay_time
+            select ROUND((p.payment_ammount * 1.0) / (p.user_amount * 1.0), 2) as payment_sum, p.message_id, p.channel_id, p.guild_id, p.payment_ammount, p.user_amount, p.pay_time
             from PAYMENTS p
             join PAYMENTS_TO_USERS ul on p.message_id = ul.message_id
             where ul.ds_uid = ?
