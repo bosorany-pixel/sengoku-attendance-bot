@@ -27,8 +27,10 @@
         </td>
         <td>{{ row['event_count'] }}</td>
         <td>
-          <a href="{{ url_for('payment_detail', uid=row['uid']) }}{% if db_param %}?db={{ db_param }}{% endif %}"></a>
-          {{ row['total_amount'] | money }}</td>
+          <a href="{{ url_for('payment_detail', uid=row['uid']) }}{% if db_param %}?db={{ db_param }}{% endif %}">
+          {{ row['total_amount'] | money }}
+          </a>
+        </td>
       </tr>
     {% endfor %}
   </tbody>
