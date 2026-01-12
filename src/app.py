@@ -106,7 +106,7 @@ def index():
         COALESCE(SUM(CASE WHEN e.disband != 1 THEN e.points ELSE 0 END), 0) AS total_points,
         u.need_to_get,
         u.is_member,
-        SUM((p.payment_ammount * 1.0) / NULLIF(p.user_amount * 1.0, 0)) AS total_amount
+        ROUND(SUM((p.payment_ammount * 1.0) / NULLIF(p.user_amount * 1.0, 0)), 2) AS total_amount
         FROM 
             USERS u
         LEFT JOIN 
