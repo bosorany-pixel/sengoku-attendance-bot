@@ -1,0 +1,8 @@
+discord.py
+python-dotenv
+aiohttp
+google-generativeai
+Pillow
+Flask
+gunicorn
+aiohttp_socks

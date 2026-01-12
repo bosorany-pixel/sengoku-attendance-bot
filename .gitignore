@@ -4,7 +4,7 @@ __pycache__/
 *.db
 *.log
 *.sh
-*.txt
+
 *temp*
 photoes/*
 *.png
