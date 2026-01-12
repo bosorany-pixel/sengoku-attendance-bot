@@ -139,6 +139,13 @@ def index():
     return render_template_string(BASE_HTML, title='мемберы × контент', subtitle=subtitle, content=html, archives=archives, db_param=db_param)
 
 
+@app.template_filter("money")
+def money(v):
+    if v is None:
+        return "—"
+    return f"{v:,}".replace(",", " ")
+
+ 
 @app.route('/user/<int:uid>')
 def user_detail(uid):
     db_param = request.args.get('db')
