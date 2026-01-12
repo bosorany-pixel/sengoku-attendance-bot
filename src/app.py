@@ -5,11 +5,18 @@ from flask import Flask, g, render_template_string, request, url_for, abort
 import dotenv
 dotenv.load_dotenv()
 
+sql_path = "/mnt/db"
+if os.path.exists("/db"):
+    sql_path = "/db"
+elif not os.path.exists("/mnt/db"):
+    raise "I need a db path"
+
+
 app = Flask(__name__)
 DB_PATH = os.environ.get("DB_PATH", os.path.join(
-    os.path.dirname(os.path.abspath(__file__)),
-    'sengoku_bot.db'
-  ))
+            sql_path,
+            'sengoku_bot.db'
+        ))
 
 ARCHIVE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'archives')
 
@@ -91,19 +98,34 @@ def index():
     
     db = get_db(db_path)
     q = db.execute("""
-      SELECT u.uid,
-           COALESCE(NULLIF(u.server_username, ''), u.global_username) AS display_name,
-           u.liable,
-           COUNT(DISTINCT CASE WHEN e.disband != 1 THEN e.message_id END) AS event_count,
-           COALESCE(SUM(CASE WHEN e.disband != 1 THEN e.points ELSE 0 END), 0) AS total_points,
-           u.need_to_get,
-           u.is_member
-      FROM USERS u
-      LEFT JOIN EVENTS_TO_USERS etu ON etu.ds_uid = u.uid
-      LEFT JOIN EVENTS e ON e.message_id = etu.message_id
-      WHERE COALESCE(NULLIF(u.server_username, ''), u.global_username) != 'D9dka'
-      GROUP BY u.uid
-      ORDER BY total_points DESC, event_count DESC, display_name COLLATE NOCASE ASC
+      SELECT 
+        u.uid,
+        COALESCE(NULLIF(u.server_username, ''), u.global_username) AS display_name,
+        u.liable,
+        COUNT(DISTINCT CASE WHEN e.disband != 1 THEN e.message_id END) AS event_count,
+        COALESCE(SUM(CASE WHEN e.disband != 1 THEN e.points ELSE 0 END), 0) AS total_points,
+        u.need_to_get,
+        u.is_member,
+        SUM((p.payment_ammount * 1.0) / NULLIF(p.user_amount * 1.0, 0)) AS total_amount
+        FROM 
+            USERS u
+        LEFT JOIN 
+            EVENTS_TO_USERS etu ON etu.ds_uid = u.uid
+        LEFT JOIN 
+            EVENTS e ON e.message_id = etu.message_id
+        LEFT JOIN 
+            PAYMENTS_TO_USERS ul ON u.uid = ul.ds_uid
+        LEFT JOIN 
+            PAYMENTS p ON p.message_id = ul.message_id
+        WHERE 
+            COALESCE(NULLIF(u.server_username, ''), u.global_username) != 'D9dka'
+        GROUP BY 
+            u.uid, display_name
+        ORDER BY 
+            total_points DESC, 
+            event_count DESC, 
+            total_amount DESC, 
+            display_name COLLATE NOCASE ASC;
     """)
     rows = q.fetchall()
     

@@ -9,3 +9,15 @@ services:
       - /mnt/db:/db
     env_file: .env
     restart: unless-stopped
+
+  website:
+    build:
+      dockerfile: Dockerfile.app
+      context: src
+    container_name: attendense-payment-website
+    volumes:
+      - /mnt/db:/db
+    ports:
+      - "5003:5000"
+    env_file: .env
+    restart: unless-stopped
