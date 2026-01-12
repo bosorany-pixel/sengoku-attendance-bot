@@ -40,6 +40,12 @@ with open(os.path.join(
 
 with open(os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
+    'static', 'payments.html'
+)) as f:
+    PAYMENTS_HTML = f.read()
+
+with open(os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
     'static', 'timeout.html'
 )) as f:
     TECHNICAL_TIMEOUT_HTML = f.read()
@@ -189,6 +195,43 @@ def user_detail(uid):
     
     html = render_template_string(USER_HTML, events=events, db_param=db_param)
     return render_template_string(BASE_HTML, title=f"{user['display_name'] or 'без имени'}", subtitle=subtitle, content=html, archives=archives, db_param=db_param)
+
+
+@app.route('/user/<int:uid>')
+def user_detail(uid):
+    db_param = request.args.get('db')
+    db_path = None
+    history_title = None
+    if db_param:
+        if not re.match(r'^[a-z]+_\d{4}$', db_param):
+            abort(404)
+        db_path = os.path.join(ARCHIVE_DIR, f"{db_param}.db")
+        if not os.path.exists(db_path):
+            abort(404)
+        history_title = ' '.join([word.capitalize() for word in db_param.split('_')])
+    
+    db = get_db(db_path)
+    uq = db.execute("SELECT uid, COALESCE(NULLIF(global_username, ''), server_username) AS display_name FROM USERS WHERE uid=?", (uid,))
+    user = uq.fetchone()
+    if not user:
+        abort(404)
+    eq = db.execute("""
+            select (p.payment_ammount * 1.0) / (p.user_amount * 1.0) as payment_sum, p.message_id, p.channel_id, p.guild_id, p.payment_ammount, p.user_ammount
+            from PAYMENTS p
+            join PAYMENTS_TO_USERS ul on p.message_id = ul.message_id
+            where ul.ds_uid = ?
+    """, (uid,))
+    payments = eq.fetchall()
+
+    archives = get_archives()
+    
+    subtitle = f"{len(payments)} выплат мембера {uq}"
+    if history_title:
+        subtitle = f"{subtitle} (Historical: {history_title})"
+    
+    html = render_template_string(PAYMENTS_HTML, events=payments, db_param=db_param)
+    return render_template_string(BASE_HTML, title=f"{user['display_name'] or 'без имени'}", subtitle=subtitle, content=html, archives=archives, db_param=db_param)
+
 
 
 from werkzeug.middleware.proxy_fix import ProxyFix
