@@ -5,6 +5,7 @@
     <th>Сумма на всех</th>
     <th>Кол-во участников</th>
     <th>Выплата на одного</th>
+    <th>Время</th>
     <th>Ссылка</th>
   </tr>
   {% for e in events %}
@@ -12,6 +13,7 @@
       <td>{{ (e['payment_ammount'] or '-') }}</td>
       <td>{{ e['user_ammount'] or '—' }}</td>
       <td>{{ e['payment_sum'] or '—' }}</td>
+      <td>{{ e['pay_time'] or '—' }}</td>
       <td><a href='https://discord.com/channels/{{ e['guild_id'] }}/{{ e['channel_id'] }}/{{ e['message_id'] }}' target='_blank'>Открыть</a></td>
     </tr>
   {% endfor %}
