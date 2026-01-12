@@ -52,7 +52,7 @@
           </a>
         </td>
         <td>{{ row['event_count'] }}</td>
-        <td>{{ row['total_amount'] }}</td>
+        <td>{{ "{:,}".format(row['total_amount']) }}</td>
       </tr>
     {% endfor %}
   </tbody>
