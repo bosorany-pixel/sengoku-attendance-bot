@@ -47,9 +47,9 @@ async def on_payment_message(message: discord.Message):
 
 
 
-@app_commands.command(name="add_payment", description="создать выплату")
+@app_commands.command(name="create_payment", description="создать выплату")
 @app_commands.describe(payment="Сумма выплаты (например '22000000', '13600000', '32100000')")
-async def add_payment(interaction: discord.Interaction, payment: str):
+async def create_payment(interaction: discord.Interaction, payment: str):
     allowed_role_ids = load_allowed_roles(interaction.guild.id)
     if allowed_role_ids:
         user_role_ids = [role.id for role in interaction.user.roles]
@@ -79,6 +79,25 @@ async def add_payment(interaction: discord.Interaction, payment: str):
     payment_threads[thread.id] = deadline
     payment_tread_to_messages[thread.id] = msg.id
     add_consumer(thread.id, on_payment_message)
+
+
+@app_commands.command(name="add_to_payment", description="добавить мембера в выплату. можно использовать только в ветке выплаты, в которую мембера не добавило.")
+@app_commands.describe(
+    username="Ник мембера, как в дискорде (например 'kKokSs (не кокос)')"
+)
+async def add_to_payment(interaction: discord.Interaction, username: str):
+    allowed_role_ids = load_allowed_roles(interaction.guild.id, "core_roles")
+    if allowed_role_ids:
+        user_role_ids = [role.id for role in interaction.user.roles]
+        if not any(role_id in allowed_role_ids for role_id in user_role_ids):
+            await interaction.response.send_message("У вас нет прав для добавления данных.", ephemeral=True)
+            return
+    uid = db_worker.get_uid_by_name(username)
+    if uid and interaction.channel.id in payment_tread_to_messages:
+        db_worker.add_event_user_link(uid, payment_tread_to_messages[interaction.channel.id])
+        await interaction.response.send_message(f"Добавил {username} в выплату ✅")
+    else:
+        await interaction.response.send_message("Кажется, ветка записи уже закрыта", ephemeral=True)
 
 
 @app_commands.command(name="inc_payment", description="увеличить сумму в табличке для мембера")
