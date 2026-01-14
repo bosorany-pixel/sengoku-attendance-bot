@@ -32,11 +32,14 @@ async def add_from_image(interaction: discord.Interaction, image: discord.Attach
     else:
         image_bytes = await image.read()
         img = Image.open(io.BytesIO(image_bytes))
+
+        if img.mode != "RGB":
+            img = img.convert("RGB")
+
         buffered = io.BytesIO()
-        img.save(buffered, format="JPEG")
+        img.save(buffered, format="JPEG", quality=95)
         image_bytes = buffered.getvalue()
         content = base64.b64encode(image_bytes).decode("ascii")
-
         # Create the JSON body
         body = {
             "mimeType": "jpg",
