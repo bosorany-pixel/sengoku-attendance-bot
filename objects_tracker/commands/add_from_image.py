@@ -27,22 +27,27 @@ gemini_configured = bool(api_key)
 @app_commands.describe(image="Изображение (скриншот) с данными об объекте")
 async def add_from_image(interaction: discord.Interaction, image: discord.Attachment):
     logging.info("got an image")
-    if os.getenv('GENAI_SOL') in {"true", "yes", "y"}:
+    if os.getenv("GENAI_SOL", "").lower() in {"true", "yes", "y"}:
         pass
     else:
         image_bytes = await image.read()
         img = Image.open(io.BytesIO(image_bytes))
 
-        if img.mode != "RGB":
-            img = img.convert("RGB")
-
         buffered = io.BytesIO()
-        img.save(buffered, format="JPEG", quality=95)
+        img.save(buffered, format="PNG", optimize=True)
+        image_bytes = buffered.getvalue()
+
+        content = base64.b64encode(image_bytes).decode("ascii")
+        try:
+            img.save(buffered, format="PNG", optimize=True)
+        except Exception as e:
+            interaction.response.send_message(f"Ошибка обработки фото: {e}", ephemeral=True)
+            return
         image_bytes = buffered.getvalue()
         content = base64.b64encode(image_bytes).decode("ascii")
         # Create the JSON body
         body = {
-            "mimeType": "jpg",
+            "mimeType": "image/png",
             "languageCodes": ["ru", "en"],
             "content": content
         }
