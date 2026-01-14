@@ -94,7 +94,7 @@ async def add_to_payment(interaction: discord.Interaction, username: str):
             return
     uid = db_worker.get_uid_by_name(username)
     if uid and interaction.channel.id in payment_tread_to_messages:
-        db_worker.add_event_user_link(uid, payment_tread_to_messages[interaction.channel.id])
+        db_worker.link_user_to_payment(uid, payment_tread_to_messages[interaction.channel.id])
         await interaction.response.send_message(f"Добавил {username} в выплату ✅")
     else:
         await interaction.response.send_message("Кажется, ветка записи уже закрыта", ephemeral=True)
