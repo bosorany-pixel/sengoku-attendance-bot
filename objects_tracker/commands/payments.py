@@ -81,7 +81,7 @@ async def create_payment(interaction: discord.Interaction, payment: str):
     add_consumer(thread.id, on_payment_message)
 
 
-@app_commands.command(name="add_to_payment", description="добавить мембера в выплату. можно использовать только в ветке выплаты, в которую мембера не добавило.")
+@app_commands.command(name="add_to_payment", description="добавить мембера в выплату. использовать только в ветке выплаты, в которую мембера не добавило.")
 @app_commands.describe(
     username="Ник мембера, как в дискорде (например 'kKokSs (не кокос)')"
 )
