@@ -79,7 +79,7 @@ async def on_payment_message(message: discord.Message):
             for n in names:
                 uid = db_worker.get_uid_by_name(n)
                 if uid:
-                    added_to.append(n)
+                    added_to.append(db_worker.get_user(uid).server_username)
                     db_worker.link_user_to_payment(uid, payment_tread_to_messages[message.channel.id])
     await message.add_reaction('💵')
     await message.reply(", ".join(added_to))
