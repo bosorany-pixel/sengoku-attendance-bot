@@ -207,15 +207,44 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         return None
 
     def get_uid_by_name(self, server_name: str) -> datatypes.User | None:
+        """
+        Get user ID by server name using exact matching only.
+        
+        Strategy:
+        1. Skip very short queries (likely OCR noise like "95")
+        2. Try exact match first
+        3. Try case-insensitive exact match
+        
+        This prevents false positives from substring matches.
+        For OCR use case, exact matching is safer than fuzzy matching
+        to avoid false positives like "95" matching "charlatan95".
+        """
+        # Strip whitespace
+        server_name = server_name.strip()
+        
+        # Skip very short queries (likely OCR noise like "95", "D9", etc.)
+        if len(server_name) < 3:
+            return None
+        
+        # Strategy 1: Exact match (fastest, most accurate)
         uid = self.fetchone(
-            "SELECT * FROM USERS WHERE server_username LIKE ?",
-            (f"%{server_name}%",)
+            "SELECT uid FROM USERS WHERE server_username = ?",
+            (server_name,)
         )
-
         if uid:
             return uid[0]
-        else:
-            return None
+        
+        # Strategy 2: Case-insensitive exact match
+        uid = self.fetchone(
+            "SELECT uid FROM USERS WHERE LOWER(server_username) = LOWER(?)",
+            (server_name,)
+        )
+        if uid:
+            return uid[0]
+        
+        # No fuzzy matching - exact match only for payment system
+        # This is intentionally strict to prevent false positives
+        return None
 
     def get_server_names(self) -> list[str]:
         rows = self.fetchall(
@@ -236,11 +265,18 @@ VALUES (?, ?, ?, ?, ?)
     ))
         
     def link_user_to_payment(self, uid, payment_id) -> None:
-        self.execute('''
-INSERT OR REPLACE INTO PAYMENTS_TO_USERS (ds_uid, message_id)
+        """
+        Link a user to a payment. Only increments user_amount if a new link is created.
+        Uses INSERT OR IGNORE to prevent duplicate entries.
+        """
+        cursor = self.execute('''
+INSERT OR IGNORE INTO PAYMENTS_TO_USERS (ds_uid, message_id)
 VALUES (?, ?)
 ''', (uid, payment_id))
-        self.execute('UPDATE PAYMENTS SET user_amount = user_amount + 1 where message_id = ?', (payment_id,))
+        
+        # Only increment user_amount if a new row was actually inserted
+        if cursor.rowcount > 0:
+            self.execute('UPDATE PAYMENTS SET user_amount = user_amount + 1 WHERE message_id = ?', (payment_id,))
 
     def get_balance(self, uid) -> float:
         rows = self.fetchall(

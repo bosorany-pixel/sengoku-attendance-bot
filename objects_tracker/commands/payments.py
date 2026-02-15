@@ -20,6 +20,43 @@ def _pay_member(payment: float, username: str, msg_id: int, ch_id: int, guild_id
     db_worker.link_user_to_payment(uid, msg_id)
     return None
 
+def filter_valid_names(ocr_lines: list[str]) -> list[str]:
+    """
+    Filter OCR results to only include lines that look like usernames.
+    This prevents false positives from page numbers, UI text, etc.
+    """
+    import re
+    
+    valid_names = []
+    for line in ocr_lines:
+        line = line.strip()
+        
+        # Skip empty lines
+        if not line:
+            continue
+        
+        # Skip very short strings (likely not a username)
+        if len(line) < 3:
+            continue
+        
+        # Skip pure numbers (likely page numbers, stats, etc.)
+        if line.isdigit():
+            continue
+        
+        # Skip common UI text patterns
+        ui_keywords = ['page', 'level', 'guild', 'server', 'online', 'offline', 'clan']
+        if any(keyword in line.lower() for keyword in ui_keywords):
+            continue
+        
+        # Must contain at least one letter
+        if not re.search(r'[a-zA-Z]', line):
+            continue
+        
+        valid_names.append(line)
+    
+    return valid_names
+
+
 async def on_payment_message(message: discord.Message):
     deadline = payment_threads.get(message.channel.id)
     if not deadline:
@@ -37,6 +74,8 @@ async def on_payment_message(message: discord.Message):
         ct = att.content_type or ""
         if ct.startswith("image/"):
             names = await _get_names_from_image(att)
+            # Filter OCR results to remove noise (page numbers, UI text, etc.)
+            names = filter_valid_names(names) if names else []
             for n in names:
                 uid = db_worker.get_uid_by_name(n)
                 if uid:
