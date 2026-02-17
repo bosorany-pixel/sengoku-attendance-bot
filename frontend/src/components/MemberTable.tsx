@@ -95,7 +95,7 @@ export function MemberTable({ members }: MemberTableProps) {
                 >
                   <td className="px-4 py-3">
                     <Link
-                      to={`/bp/${member.uid}`}
+                      to={`/member/${member.uid}${dbQuery}`}
                       className="text-accent-blue hover:underline transition-colors duration-200 font-medium"
                     >
                       {member.display_name || '—'}
@@ -103,7 +103,7 @@ export function MemberTable({ members }: MemberTableProps) {
                   </td>
                   <td className="px-4 py-3 text-dark-textLight text-sm">
                     <Link
-                      to={`/user/${member.uid}${dbQuery}`}
+                      to={`/member/${member.uid}${dbQuery ? `${dbQuery}&tab=events` : '?tab=events'}`}
                       className="text-accent-blue hover:underline transition-colors duration-200"
                     >
                       {member.uid}
@@ -114,7 +114,7 @@ export function MemberTable({ members }: MemberTableProps) {
                   </td>
                   <td className="px-4 py-3 tabular-nums">
                     <Link
-                      to={`/payment/${member.uid}${dbQuery}`}
+                      to={`/member/${member.uid}${dbQuery ? `${dbQuery}&tab=payments` : '?tab=payments'}`}
                       className="text-accent-blue hover:underline transition-colors duration-200"
                     >
                       {formatMoney(member.total_amount)}
