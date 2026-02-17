@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { useLevelsAndAchievements } from '../hooks/useLevels';
 import type { Member } from '../lib/types';
+import type { Level } from '../lib/types';
 import { motion } from 'framer-motion';
 
 interface MemberTableProps {
@@ -12,10 +14,23 @@ function formatMoney(value: number): string {
   return value.toLocaleString('ru-RU').replace(/,/g, ' ');
 }
 
+/** BP level from attendance: max level whose threshold <= eventCount */
+function getBpLevel(eventCount: number, levels: Level[]): number | null {
+  if (!levels.length) return null;
+  const sorted = [...levels].sort((a, b) => a.level - b.level);
+  let maxLevel: number | null = null;
+  for (const l of sorted) {
+    if (eventCount >= l.attendance) maxLevel = l.level;
+  }
+  return maxLevel;
+}
+
 export function MemberTable({ members }: MemberTableProps) {
   const [searchParams] = useSearchParams();
   const [filter, setFilter] = useState('');
   const currentDb = searchParams.get('db');
+  const { data: levelsData } = useLevelsAndAchievements();
+  const levels = levelsData?.levels ?? [];
 
   const filteredMembers = useMemo(() => {
     if (!filter) return members;
@@ -74,7 +89,7 @@ export function MemberTable({ members }: MemberTableProps) {
                   Ник
                 </th>
                 <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-dark-textLight">
-                  Посещений
+                  Уровень батлпаса
                 </th>
                 <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-dark-textLight last:rounded-tr-2xl">
                   Серебра
@@ -100,10 +115,10 @@ export function MemberTable({ members }: MemberTableProps) {
                   </td>
                   <td className="px-4 py-3 tabular-nums">
                     <Link
-                      to={`/member/${member.uid}${dbQuery ? `${dbQuery}&tab=events` : '?tab=events'}`}
+                      to={`/member/${member.uid}${dbQuery ? `${dbQuery}&tab=bp` : '?tab=bp'}`}
                       className="text-accent-blue hover:underline transition-colors duration-200"
                     >
-                      {member.event_count}
+                      {getBpLevel(member.event_count, levels) ?? '0'}
                     </Link>
                   </td>
                   <td className="px-4 py-3 tabular-nums">
