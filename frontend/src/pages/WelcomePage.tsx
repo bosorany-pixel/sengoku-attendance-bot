@@ -104,10 +104,13 @@ export default function WelcomePage() {
   const [stats, setStats] = useState<MordorStats | null>(null)
   const [statsLoading, setStatsLoading] = useState(true)
   const [mouse, setMouse] = useState({ x: 50, y: 50 })
+  const lenisCleanupRef = useRef<(() => void) | null>(null)
 
-  // Reset scroll and apply page-specific body styles when entering (fixes client-side nav from MORDOR)
+  // Reset scroll, clear ScrollTrigger state, apply body styles (fixes EREBOR→MORDOR→EREBOR)
   useEffect(() => {
     window.scrollTo(0, 0)
+    ScrollTrigger.clearScrollMemory()
+    ScrollTrigger.getAll().forEach((st) => st.kill())
     const prevBackground = document.body.style.background
     const prevColor = document.body.style.color
     const prevMinHeight = document.body.style.minHeight
@@ -118,6 +121,7 @@ export default function WelcomePage() {
       document.body.style.background = prevBackground
       document.body.style.color = prevColor
       document.body.style.minHeight = prevMinHeight
+      ScrollTrigger.clearScrollMemory()
     }
   }, [])
 
@@ -141,7 +145,8 @@ export default function WelcomePage() {
     })
 
     lenis.on("scroll", ScrollTrigger.update)
-    gsap.ticker.add((time) => lenis.raf(time * 1000))
+    const tickerCallback = (time: number) => lenis.raf(time * 1000)
+    gsap.ticker.add(tickerCallback)
     gsap.ticker.lagSmoothing(0)
 
     // Start at top and refresh ScrollTrigger after layout (fixes client-side nav from MORDOR)
@@ -150,12 +155,16 @@ export default function WelcomePage() {
       ScrollTrigger.refresh()
     }, 100)
 
-    return () => {
+    lenisCleanupRef.current = () => {
       clearTimeout(refreshId)
-      gsap.ticker.remove((time) => lenis.raf(time * 1000))
+      gsap.ticker.remove(tickerCallback)
       lenis.off("scroll", ScrollTrigger.update)
       ScrollTrigger.scrollerProxy(document.body, {})
       ;(lenis as unknown as { destroy?: () => void })?.destroy?.()
+      ScrollTrigger.clearScrollMemory()
+    }
+    return () => {
+      lenisCleanupRef.current = null
     }
   }, [])
 
@@ -176,7 +185,7 @@ export default function WelcomePage() {
     let cancelled = false
     let timeoutId: ReturnType<typeof setTimeout> | null = null
 
-    // Defer so refs and Lenis are ready after client-side nav from MORDOR (next frame + short delay)
+    // Defer so refs and Lenis are ready after client-side nav (next frame + delay; works for EREBOR→MORDOR→EREBOR)
     const frameId = requestAnimationFrame(() => {
       timeoutId = setTimeout(() => {
         if (cancelled) return
@@ -185,6 +194,7 @@ export default function WelcomePage() {
         const ring = runeRingRef.current
         const shatter = shatterRef.current
         if (!hero || !doors || !ring) return
+        ScrollTrigger.clearScrollMemory()
 
         ctx = gsap.context(() => {
           gsap.fromTo(
@@ -301,14 +311,17 @@ export default function WelcomePage() {
         if (!cancelled) {
           ScrollTrigger.refresh()
         }
-      }, 50)
+      }, 120)
     })
 
     return () => {
       cancelled = true
       cancelAnimationFrame(frameId)
       if (timeoutId != null) clearTimeout(timeoutId)
+      lenisCleanupRef.current?.()
+      lenisCleanupRef.current = null
       if (ctx) ctx.revert()
+      ScrollTrigger.clearScrollMemory()
     }
   }, [])
 
