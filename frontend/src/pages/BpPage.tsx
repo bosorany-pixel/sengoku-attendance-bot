@@ -36,12 +36,12 @@ export function BpPage() {
 
     const sortedLevels = [...levels].sort((a, b) => a.level - b.level);
     const nextLevel = sortedLevels.find((l) => l.attendance > eventCount);
-    const pointsToNextLevel = nextLevel != null ? nextLevel.attendance - eventCount : null;
+    const pointsToNextLevel = nextLevel != null ? Math.round(nextLevel.attendance - eventCount) : null;
 
     const firstUnachievedIndex = sortedLevels.findIndex((l) => l.attendance > eventCount);
     const withProgress = sortedLevels.map((l, index) => {
-      const required = l.attendance;
-      const current = Math.min(eventCount, required);
+      const required = Math.round(l.attendance);
+      const current = Math.round(Math.min(eventCount, required));
       const achieved = eventCount >= required;
       const isNextLevel = index === firstUnachievedIndex;
       return {

@@ -33,11 +33,11 @@ export function BpContent({ userId }: BpContentProps) {
     const descMap = levelToDescription(achievements);
     const sortedLevels = [...levels].sort((a, b) => a.level - b.level);
     const nextLevel = sortedLevels.find((l) => l.attendance > eventCount);
-    const pointsToNextLevel = nextLevel != null ? nextLevel.attendance - eventCount : null;
+    const pointsToNextLevel = nextLevel != null ? Math.round(nextLevel.attendance - eventCount) : null;
     const firstUnachievedIndex = sortedLevels.findIndex((l) => l.attendance > eventCount);
     const withProgress = sortedLevels.map((l, index) => {
-      const required = l.attendance;
-      const current = Math.min(eventCount, required);
+      const required = Math.round(l.attendance);
+      const current = Math.round(Math.min(eventCount, required));
       const achieved = eventCount >= required;
       const isNextLevel = index === firstUnachievedIndex;
       return {
@@ -71,18 +71,18 @@ export function BpContent({ userId }: BpContentProps) {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35 }}
-      className="max-w-2xl mx-auto flex flex-col items-center text-center w-full px-2"
+      className="w-full flex flex-row gap-6 items-start px-2"
     >
       {userId && (
-        <div className="mb-10 w-full max-w-sm">
-          <div className="bg-dark-card/80 border border-dark-border rounded-xl px-5 py-4 shadow-sm flex flex-col items-center gap-3">
-            <div className="flex flex-wrap items-baseline justify-center gap-2">
+        <div className="w-1/4 flex-shrink-0 min-w-0">
+          <div className="bg-dark-card/80 border border-dark-border rounded-xl px-5 py-4 shadow-sm flex flex-col gap-3 text-left">
+            <div className="flex flex-wrap items-baseline gap-2">
               <span className="text-dark-textLight text-xs uppercase tracking-wider">ник</span>
               <span className="px-3 py-1 rounded-lg bg-dark-bg border border-dark-border text-white font-medium text-sm">
                 {displayName}
               </span>
             </div>
-            <div className="flex flex-col items-center">
+            <div className="flex flex-col">
               <span className="text-dark-textLight text-xs uppercase tracking-wider">Посещений до следующего левела</span>
               <span className={`mt-1 text-lg font-semibold tabular-nums ${pointsToNextLevel !== null && pointsToNextLevel > 0 ? 'text-accent-green' : 'text-white'}`}>
                 {pointsToNextLevel !== null ? pointsToNextLevel : '—'}
@@ -92,12 +92,13 @@ export function BpContent({ userId }: BpContentProps) {
         </div>
       )}
 
-      {levelsWithProgress.length === 0 ? (
-        <p className="text-dark-textLight text-sm py-8">Нет уровней</p>
-      ) : (
-        <div className="w-full max-w-md mx-auto">
-          <p className="text-dark-textLight text-xs uppercase tracking-wider mb-3 text-center">Уровни</p>
-          <div className="relative bg-dark-card/40 border border-dark-border rounded-2xl py-6 px-6 shadow-inner">
+      <div className={userId ? 'flex-1 min-w-0' : 'w-full'}>
+        {levelsWithProgress.length === 0 ? (
+          <p className="text-dark-textLight text-sm py-8">Нет уровней</p>
+        ) : (
+          <div className="w-full">
+            <p className="text-dark-textLight text-xs uppercase tracking-wider mb-3 text-left">Уровни</p>
+            <div className="relative bg-dark-card/40 border border-dark-border rounded-2xl py-6 px-6 shadow-inner">
             <div
               className="absolute flex flex-col items-center top-6 bottom-6"
               style={{ left: '7rem' }}
@@ -177,7 +178,8 @@ export function BpContent({ userId }: BpContentProps) {
             </ul>
           </div>
         </div>
-      )}
+        )}
+      </div>
     </motion.div>
   );
 }

@@ -30,7 +30,7 @@ export function MembersPage() {
   const subtitle = `Всего мемберов: ${members.length}`;
 
   return (
-    <Layout title="мемберы × контент" subtitle={subtitle}>
+    <Layout title="MORDOR" subtitle={subtitle}>
       <MemberTable members={members} />
     </Layout>
   );

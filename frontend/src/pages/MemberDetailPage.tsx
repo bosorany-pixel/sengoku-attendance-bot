@@ -3,6 +3,7 @@ import { useMembers } from '../hooks/useMembers';
 import { useUserEvents } from '../hooks/useUserEvents';
 import { useUserPayments } from '../hooks/useUserPayments';
 import { Layout } from '../components/Layout';
+import { MemberTitle } from '../components/MemberTitle';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { BpContent } from '../components/BpContent';
 import { EventTable } from '../components/EventTable';
@@ -45,27 +46,30 @@ export function MemberDetailPage() {
         : payments ? `${payments.length} выплат` : 'Загрузка...';
 
   return (
-    <Layout title={displayName} subtitle={subtitle} showSidebar={false}>
-      <div className="max-w-4xl mx-auto">
+    <Layout showSidebar={false}>
+      <div className="max-w-4xl mx-auto text-left">
         <Link to="/" className="inline-flex items-center gap-1.5 text-accent-blue hover:underline text-sm mb-4">
           ← На главную
         </Link>
 
-        <div className="flex gap-2 mb-6">
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => setTab(t.id)}
-              className={`font-display px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-                validTab === t.id
-                  ? 'bg-accent-blue/20 text-accent-blue border border-accent-blue/40'
-                  : 'bg-dark-card/80 border border-dark-border text-dark-textLight hover:bg-white/5 hover:text-white'
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
+        <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
+          <MemberTitle title={displayName} subtitle={subtitle} />
+          <div className="flex gap-2 flex-shrink-0">
+            {TABS.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setTab(t.id)}
+                className={`font-display px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                  validTab === t.id
+                    ? 'bg-accent-blue/20 text-accent-blue border border-accent-blue/40'
+                    : 'bg-dark-card/80 border border-dark-border text-dark-textLight hover:bg-white/5 hover:text-white'
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <AnimatePresence mode="wait">

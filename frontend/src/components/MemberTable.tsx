@@ -11,7 +11,7 @@ interface MemberTableProps {
 
 function formatMoney(value: number): string {
   if (value === null || value === undefined) return '—';
-  return value.toLocaleString('ru-RU').replace(/,/g, ' ');
+  return Math.round(value).toLocaleString('ru-RU').replace(/,/g, ' ');
 }
 
 /** BP level from attendance: max level whose threshold <= eventCount */
@@ -41,6 +41,10 @@ export function MemberTable({ members }: MemberTableProps) {
   }, [members, filter]);
 
   const dbQuery = currentDb ? `?db=${currentDb}` : '';
+  const totalSilver = useMemo(
+    () => Math.round(members.reduce((sum, m) => sum + (m.total_amount ?? 0), 0)),
+    [members]
+  );
 
   return (
     <motion.div
@@ -92,7 +96,10 @@ export function MemberTable({ members }: MemberTableProps) {
                   Уровень батлпаса
                 </th>
                 <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-dark-textLight last:rounded-tr-2xl">
-                  Серебра
+                  <span className="block">Серебра</span>
+                  <span className="block text-[11px] font-normal normal-case mt-0.5 text-dark-textLight/80 tabular-nums">
+                    {formatMoney(totalSilver)}
+                  </span>
                 </th>
               </tr>
             </thead>
