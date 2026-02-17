@@ -20,14 +20,14 @@ def _check_allowed(interaction: discord.Interaction) -> bool:
 @app_commands.describe(
     level="Номер уровня батлпаса",
     attendance="Сколько посещений нужно на этот уровень",
-    description="Описание награды/достижения за уровень",
+    description="Описание награды/достижения за уровень (необязательно — можно создать уровень без достижения)",
     picture="URL или текст картинки (необязательно)",
 )
 async def eddit_level(
     interaction: discord.Interaction,
     level: int,
     attendance: int,
-    description: str,
+    description: str | None = None,
     picture: str = "",
 ):
     if not _check_allowed(interaction):
@@ -42,11 +42,12 @@ async def eddit_level(
         return
     try:
         db_worker.set_level_attendance(level, attendance)
-        db_worker.set_achievement_for_level(level, description, picture or "")
-        await interaction.response.send_message(
-            f"Уровень **{level}** обновлён: посещений **{attendance}**, достижение задано.",
-            ephemeral=True,
-        )
+        if description is not None:
+            db_worker.set_achievement_for_level(level, description, picture or "")
+        msg = f"Уровень **{level}** обновлён: посещений **{attendance}**."
+        if description is not None:
+            msg += " Достижение задано."
+        await interaction.response.send_message(msg, ephemeral=True)
     except Exception as e:
         await interaction.response.send_message(
             f"Ошибка: {e}", ephemeral=True
