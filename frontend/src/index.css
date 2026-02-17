@@ -77,4 +77,9 @@
   .bp-dot-next-pulse {
     animation: bp-dot-next-pulse 2s ease-in-out infinite;
   }
+
+  /* Timeline line segments: subtle soft edge */
+  .bp-line-segment {
+    filter: blur(0.35px);
+  }
 }
