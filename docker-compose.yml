@@ -14,7 +14,7 @@ services:
       dockerfile: Dockerfile
     container_name: sengoku-api
     ports:
-      - "8000:8000"
+      - "8100:8000"
     environment:
       - DB_PATH=/db/sengoku_bot.db
       - API_PORT=8000
@@ -36,7 +36,7 @@ services:
       dockerfile: Dockerfile
     container_name: sengoku-frontend
     ports:
-      - "80:80"
+      - "8101:80"
     depends_on:
       - api
     restart: unless-stopped
