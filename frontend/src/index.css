@@ -82,4 +82,26 @@
   .bp-line-segment {
     filter: blur(0.35px);
   }
+
+  /* Fire sparks: rise from bottom to center and fade */
+  @keyframes spark-rise {
+    0% {
+      transform: translateY(0) scale(1);
+      opacity: var(--spark-opacity, 0.7);
+    }
+    100% {
+      transform: translateY(-50vh) scale(0.3);
+      opacity: 0;
+    }
+  }
+
+  .spark {
+    position: absolute;
+    bottom: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle, #fbbf24 0%, #f97316 40%, #dc2626 100%);
+    box-shadow: 0 0 6px 2px rgba(251, 191, 36, 0.4);
+    animation: spark-rise ease-out infinite;
+    will-change: transform, opacity;
+  }
 }
