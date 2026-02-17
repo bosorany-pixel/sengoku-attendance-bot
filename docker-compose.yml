@@ -20,8 +20,8 @@ services:
       - API_PORT=8000
       - TECHNICAL_TIMEOUT=${TECHNICAL_TIMEOUT:-0}
     volumes:
-      - ./db:/db
-      - ./src/archives:/app/archives
+      - /mnt/db:/db
+      - /mnt/archives:/app/archives
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
