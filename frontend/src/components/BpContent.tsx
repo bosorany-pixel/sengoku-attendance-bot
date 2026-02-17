@@ -4,15 +4,19 @@ import { useMembers } from '../hooks/useMembers';
 import { LoadingSpinner } from './LoadingSpinner';
 import type { Achievement } from '../lib/types';
 import { motion } from 'framer-motion';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 
-function levelToDescription(achievements: Achievement[]): Record<number, string> {
-  const map: Record<number, string> = {};
+function levelToAchievement(achievements: Achievement[]): Record<number, { description: string; picture: string }> {
+  const map: Record<number, { description: string; picture: string }> = {};
   for (const a of achievements) {
-    if (map[a.bp_level] == null) map[a.bp_level] = a.description || '—';
+    if (map[a.bp_level] == null)
+      map[a.bp_level] = { description: a.description || '—', picture: a.picture || '' };
   }
   return map;
 }
+
+const DEFAULT_ROW_HEIGHT_PX = 56; /* height when no picture */
+const MAX_ROW_HEIGHT_PX = 420; /* cap image-based row height */
 
 interface BpContentProps {
   userId: string;
@@ -30,7 +34,7 @@ export function BpContent({ userId }: BpContentProps) {
   const { pointsToNextLevel, levelsWithProgress } = useMemo(() => {
     const levels = levelsData?.levels ?? [];
     const achievements = levelsData?.achievements ?? [];
-    const descMap = levelToDescription(achievements);
+    const achievementMap = levelToAchievement(achievements);
     const sortedLevels = [...levels].sort((a, b) => a.level - b.level);
     const nextLevel = sortedLevels.find((l) => l.attendance > eventCount);
     const pointsToNextLevel = nextLevel != null ? Math.round(nextLevel.attendance - eventCount) : null;
@@ -40,17 +44,37 @@ export function BpContent({ userId }: BpContentProps) {
       const current = Math.round(Math.min(eventCount, required));
       const achieved = eventCount >= required;
       const isNextLevel = index === firstUnachievedIndex;
+      const ach = achievementMap[l.level];
       return {
         level: l.level,
         current,
         total: required,
         achieved,
         isNextLevel,
-        description: descMap[l.level] ?? '—',
+        description: ach?.description ?? '—',
+        picture: ach?.picture ?? '',
       };
     });
     return { pointsToNextLevel, levelsWithProgress: withProgress };
   }, [levelsData, eventCount]);
+
+  const [rowHeights, setRowHeights] = useState<Record<number, number>>({});
+
+  useEffect(() => {
+    if (!levelsWithProgress.length) return;
+    levelsWithProgress.forEach((item) => {
+      if (!item.picture) return;
+      const img = new Image();
+      img.onload = () => {
+        const h = Math.min(MAX_ROW_HEIGHT_PX, Math.max(DEFAULT_ROW_HEIGHT_PX, img.naturalHeight));
+        setRowHeights((prev) => (prev[item.level] === h ? prev : { ...prev, [item.level]: h }));
+      };
+      img.src = item.picture;
+    });
+  }, [levelsWithProgress]);
+
+  const getRowHeightPx = (level: number, hasPicture: boolean) =>
+    hasPicture ? (rowHeights[level] ?? DEFAULT_ROW_HEIGHT_PX) : DEFAULT_ROW_HEIGHT_PX;
 
   const error = levelsError ?? userError;
   const isLoading = levelsLoading || (userId && userLoading);
@@ -111,8 +135,9 @@ export function BpContent({ userId }: BpContentProps) {
                 const showParticles = dotWhite || item.isNextLevel;
                 const particleClass = dotWhite && !item.isNextLevel ? 'bp-particle-steady' : item.isNextLevel ? 'bp-particle-pulse' : '';
                 const dotExtraClass = dotWhite ? 'bg-white border-white bp-dot-glow' : item.isNextLevel ? 'bg-dark-border border-dark-border bp-dot-next-pulse' : 'bg-dark-border border-dark-border';
+                const rowHeightPx = getRowHeightPx(item.level, !!item.picture);
                 return (
-                  <div key={item.level} className="flex flex-col items-center flex-shrink-0 w-0 h-14">
+                  <div key={item.level} className="flex flex-col items-center flex-shrink-0 w-0" style={{ height: `${rowHeightPx}px` }}>
                     <div className={`bp-line-segment w-0.5 flex-1 min-h-[0.5rem] ${segAboveWhite ? 'bg-white' : 'bg-dark-border'}`} />
                     <div className="relative flex flex-shrink-0 items-center justify-center w-6 h-6">
                       {showParticles && particleClass && (
@@ -151,27 +176,51 @@ export function BpContent({ userId }: BpContentProps) {
                   initial={{ opacity: 0, x: -12 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className={`flex items-center gap-3 h-14 py-0 rounded-lg px-2 -mx-2 transition-colors ${item.isNextLevel ? 'bg-white/5' : 'hover:bg-white/[0.03]'}`}
+                  style={{
+                    minHeight: `${getRowHeightPx(item.level, !!item.picture)}px`,
+                    height: `${getRowHeightPx(item.level, !!item.picture)}px`,
+                  }}
+                  className={`relative flex items-center gap-3 py-0 rounded-lg px-2 -mx-2 transition-colors overflow-hidden ${
+                    item.isNextLevel ? 'bg-white/5' : 'hover:bg-white/[0.03]'
+                  } ${!item.picture ? 'bg-dark-card/20' : ''}`}
                 >
-                  <div className="w-16 flex-shrink-0 text-right">
-                    <span className="text-dark-textLight text-sm tabular-nums">
-                      <span className={item.achieved ? 'text-white' : undefined}>{item.current}</span>
-                      <span className="text-dark-border">/</span>
-                      <span>{item.total}</span>
-                    </span>
-                  </div>
-                  <div className="w-6 flex-shrink-0" aria-hidden />
-                  <div className="flex-1 min-w-0 flex items-center leading-tight gap-2">
-                    <span
-                      className={`inline-flex items-center justify-center rounded-full px-1.5 py-0.5 text-xs font-semibold min-w-[1.25rem] flex-shrink-0 ${
-                        item.achieved ? 'bg-white/20 text-white' : item.isNextLevel ? 'bg-accent-green/20 text-accent-green' : 'bg-dark-border/60 text-dark-textLight'
-                      }`}
-                    >
-                      {item.level}
-                    </span>
-                    <span className={`text-[0.95rem] ${item.achieved ? 'text-white' : item.isNextLevel ? 'text-accent-green/90' : 'text-dark-textLight'}`}>
-                      {item.description}
-                    </span>
+                  {item.picture && (
+                    <>
+                      <div
+                        className="absolute inset-0 bg-cover bg-right bg-no-repeat"
+                        style={{ backgroundImage: `url(${item.picture})` }}
+                        aria-hidden
+                      />
+                      <div
+                        className="absolute inset-0 pointer-events-none"
+                        style={{
+                          background: 'linear-gradient(to right, #1e1e1e 0%, rgba(30,30,30,0.97) 25%, rgba(30,30,30,0.6) 55%, transparent 100%)',
+                        }}
+                        aria-hidden
+                      />
+                    </>
+                  )}
+                  <div className="relative z-10 flex items-center gap-3 w-full min-w-0">
+                    <div className="w-16 flex-shrink-0 text-right">
+                      <span className="text-dark-textLight text-sm tabular-nums">
+                        <span className={item.achieved ? 'text-white' : undefined}>{item.current}</span>
+                        <span className="text-dark-border">/</span>
+                        <span>{item.total}</span>
+                      </span>
+                    </div>
+                    <div className="w-6 flex-shrink-0" aria-hidden />
+                    <div className="flex-1 min-w-0 flex items-center leading-tight gap-2">
+                      <span
+                        className={`inline-flex items-center justify-center rounded-full px-1.5 py-0.5 text-xs font-semibold min-w-[1.25rem] flex-shrink-0 ${
+                          item.achieved ? 'bg-white/20 text-white' : item.isNextLevel ? 'bg-accent-green/20 text-accent-green' : 'bg-dark-border/60 text-dark-textLight'
+                        }`}
+                      >
+                        {item.level}
+                      </span>
+                      <span className={`text-[0.95rem] ${item.achieved ? 'text-white' : item.isNextLevel ? 'text-accent-green/90' : 'text-dark-textLight'}`}>
+                        {item.description}
+                      </span>
+                    </div>
                   </div>
                 </motion.li>
               ))}
