@@ -75,7 +75,12 @@ export function MemberTable({ members }: MemberTableProps) {
                 className="table-row even:bg-[#242424]"
               >
                 <td className="border border-[#555] p-2.5">
-                  {member.display_name || '—'}
+                  <Link
+                    to={`/bp/${member.uid}`}
+                    className="text-accent-blue hover:underline"
+                  >
+                    {member.display_name || '—'}
+                  </Link>
                 </td>
                 <td className="border border-[#555] p-2.5">
                   <Link

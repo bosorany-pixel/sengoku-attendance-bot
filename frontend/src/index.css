@@ -28,4 +28,53 @@
   .input-search {
     @apply bg-dark-card text-dark-text border border-dark-border rounded px-3 py-2 focus:outline-none focus:border-accent-blue;
   }
+
+  /* BP achieved dot: soft glow */
+  .bp-dot-glow {
+    box-shadow: 0 0 8px 2px rgba(255, 255, 255, 0.5),
+                0 0 16px 4px rgba(255, 255, 255, 0.2);
+  }
+
+  /* Achieved: 6 particles glow constantly (no animation) */
+  .bp-particle-steady {
+    opacity: 0.75;
+    box-shadow: 0 0 4px 1px rgba(255, 255, 255, 0.6);
+  }
+
+  /* Next level: pulsing particles */
+  @keyframes bp-particle-float {
+    0%, 100% {
+      opacity: 0.25;
+      transform: scale(0.8);
+    }
+    50% {
+      opacity: 0.9;
+      transform: scale(1.4);
+    }
+  }
+
+  .bp-particle-pulse {
+    animation: bp-particle-float 2.2s ease-in-out infinite;
+  }
+
+  .bp-particle-pulse:nth-child(1) { animation-delay: 0s; }
+  .bp-particle-pulse:nth-child(2) { animation-delay: 0.2s; }
+  .bp-particle-pulse:nth-child(3) { animation-delay: 0.4s; }
+  .bp-particle-pulse:nth-child(4) { animation-delay: 0.6s; }
+  .bp-particle-pulse:nth-child(5) { animation-delay: 0.8s; }
+  .bp-particle-pulse:nth-child(6) { animation-delay: 1s; }
+
+  /* Next level dot: subtle pulse on ring/glow */
+  @keyframes bp-dot-next-pulse {
+    0%, 100% {
+      box-shadow: 0 0 6px 1px rgba(255, 255, 255, 0.35);
+    }
+    50% {
+      box-shadow: 0 0 12px 3px rgba(255, 255, 255, 0.6);
+    }
+  }
+
+  .bp-dot-next-pulse {
+    animation: bp-dot-next-pulse 2s ease-in-out infinite;
+  }
 }

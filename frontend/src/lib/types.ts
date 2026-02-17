@@ -63,3 +63,27 @@ export interface UserPaymentsResponse {
 export interface ArchivesListResponse {
   archives: Archive[];
 }
+
+// BP / levels & achievements
+export interface Level {
+  level: number;
+  attendance: number;
+}
+
+export interface Achievement {
+  id: number;
+  bp_level: number;
+  description: string;
+  picture: string;
+}
+
+export interface LevelsAndAchievementsResponse {
+  levels: Level[];
+  achievements: Achievement[];
+}
+
+export interface UserAchievementsResponse {
+  user: UserDetail;
+  achievements: Achievement[];
+  total_count: number;
+}
