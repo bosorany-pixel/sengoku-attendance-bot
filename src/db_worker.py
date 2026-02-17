@@ -1,13 +1,22 @@
 import sqlite3
 import datetime
-import datatypes
+import src.datatypes as datatypes
 import os
 import pandas as pd
+
+sql_path = "/mnt/db"
+if os.path.exists("/db"):
+    sql_path = "/db"
+elif not os.path.exists("/mnt/db"):
+    raise "I need a db path"
+
+
 class DBWorker:
     def __init__(self, db_path: str = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
+            sql_path,
             'sengoku_bot.db'
         )):
+        print(f"connected to db on {db_path}")
         self.conn = sqlite3.connect(db_path)
         self.conn.execute("PRAGMA foreign_keys = ON")
         self.cursor = self.conn.cursor()
@@ -59,8 +68,27 @@ CREATE TABLE IF NOT EXISTS BRANCH_MESSAGES (
     FOREIGN KEY (parent_message_id) REFERENCES EVENTS(message_id)
 );
 ''')
+        self.cursor.execute('''
+CREATE TABLE IF NOT EXISTS PAYMENTS (
+    payment_ammount REAL,
+    message_id INTEGER PRIMARY KEY,
+    channel_id INTEGER,
+    guild_id INTEGER,
+    pay_time DATETIME,
+    user_amount INTEGER DEFAULT 0
+)
+''')
+        self.cursor.execute('''
+CREATE TABLE IF NOT EXISTS PAYMENTS_TO_USERS (
+    ds_uid INTEGER,
+    message_id INTEGER,
+    PRIMARY KEY (ds_uid, message_id),
+    FOREIGN KEY (ds_uid) REFERENCES USERS(uid),
+    FOREIGN KEY (message_id) REFERENCES PAYMENTS(message_id)
+)
+''')
 
-    def execute(self, query: str, params: tuple = ()):
+    def execute(self, query: str, params: tuple = (), commit: bool = False):
         self.cursor.execute(query, params)
         self.conn.commit()
         return self.cursor
@@ -177,3 +205,134 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 timeout=row[5]
             )
         return None
+
+    def get_uid_by_name(self, server_name: str) -> datatypes.User | None:
+        """
+        Get user ID by server name using exact matching only.
+        
+        Strategy:
+        1. Skip very short queries (likely OCR noise like "95")
+        2. Try exact match first
+        3. Try case-insensitive exact match
+        
+        This prevents false positives from substring matches.
+        For OCR use case, exact matching is safer than fuzzy matching
+        to avoid false positives like "95" matching "charlatan95".
+        """
+        # Strip whitespace
+        server_name = server_name.strip()
+        
+        # Skip very short queries (likely OCR noise like "95", "D9", etc.)
+        if len(server_name) < 3:
+            return None
+        
+        # Strategy 1: Exact match (fastest, most accurate)
+        uid = self.fetchone(
+            "SELECT uid FROM USERS WHERE server_username = ?",
+            (server_name,)
+        )
+        if uid:
+            return uid[0]
+        
+        # Strategy 2: Case-insensitive exact match
+        uid = self.fetchone(
+            "SELECT uid FROM USERS WHERE LOWER(server_username) = LOWER(?)",
+            (server_name,)
+        )
+        if uid:
+            return uid[0]
+        
+        # No fuzzy matching - exact match only for payment system
+        # This is intentionally strict to prevent false positives
+        return None
+
+    def get_server_names(self) -> list[str]:
+        rows = self.fetchall(
+            "select server_username from USERS where server_username != ''"
+        )
+        return [row[0] for row in rows]
+
+    def add_payment(self, payment: datatypes.Payment) -> None:
+        self.execute("""
+INSERT OR REPLACE INTO PAYMENTS (payment_ammount, message_id, channel_id, guild_id, pay_time)
+VALUES (?, ?, ?, ?, ?)
+""", (
+        payment.payment_ammount,
+        payment.message_id,
+        payment.channel_id,
+        payment.guild_id,
+        payment.pay_time
+    ))
+        
+    def link_user_to_payment(self, uid, payment_id) -> None:
+        """
+        Link a user to a payment. Only increments user_amount if a new link is created.
+        Uses INSERT OR IGNORE to prevent duplicate entries.
+        """
+        cursor = self.execute('''
+INSERT OR IGNORE INTO PAYMENTS_TO_USERS (ds_uid, message_id)
+VALUES (?, ?)
+''', (uid, payment_id))
+        
+        # Only increment user_amount if a new row was actually inserted
+        if cursor.rowcount > 0:
+            self.execute('UPDATE PAYMENTS SET user_amount = user_amount + 1 WHERE message_id = ?', (payment_id,))
+
+    def get_balance(self, uid) -> float:
+        rows = self.fetchall(
+            """
+            select (p.payment_ammount * 1.0) / (p.user_amount * 1.0)
+            from PAYMENTS p
+            join PAYMENTS_TO_USERS ul on p.message_id = ul.message_id
+            where ul.ds_uid = ?
+            """,
+            (uid,)
+        )
+        print(rows)
+        return round(sum(row[0] for row in rows if row[0] is not None), 3)
+
+
+    def get_top_users(self, top_n: int) -> list[tuple]:
+        return self.fetchall(
+            """
+            SELECT
+                COALESCE(NULLIF(u.server_username, ''), u.global_username) AS display_name,
+                SUM((p.payment_ammount * 1.0) / NULLIF(p.user_amount * 1.0, 0)) AS total_amount
+            FROM PAYMENTS p
+            JOIN PAYMENTS_TO_USERS ul ON p.message_id = ul.message_id
+            JOIN USERS u ON u.uid = ul.ds_uid
+            GROUP BY u.uid, display_name
+            ORDER BY total_amount DESC
+            LIMIT ?
+            """,
+            (top_n,),
+        )
+    
+
+def format_sqlite_rows(rows, headers=None, max_rows=20):
+    if not rows:
+        return "пусто. совсем."
+
+    rows = rows[:max_rows]
+
+    if headers:
+        rows = [headers] + list(rows)
+
+    cols = list(zip(*rows))
+    widths = [max(len(str(cell)) for cell in col) for col in cols]
+
+    lines = []
+    for i, row in enumerate(rows):
+        line = " | ".join(
+            str(cell).ljust(widths[idx])
+            for idx, cell in enumerate(row)
+        )
+        if headers and i == 0:
+            sep = "-+-".join("-" * w for w in widths)
+            lines.append(line)
+            lines.append(sep)
+        else:
+            lines.append(line)
+
+    result = "```\n" + "\n".join(lines) + "\n```"
+    return result

@@ -1,30 +1,4 @@
 <!doctype html>
-<div class="info-section">
-  <h2>Подсчет ведется с отставанием в 24 часа, т.е. сейчас посещения за последние 24 часа не отображаются.</h2>
-  <p>
-    Эта таблица в течение месяца — просто ориентир, чтобы вы примерно представляли, сколько вам нужно сходить на контент.<br>
-    В конце месяца будет точный подсчет очков и посещений, и если вы не наберете нужное количество очков, то будет кик.
-  </p>
-  <p>
-    Если вам кажется, что на какой-то контент вы сходили, а он не учтен, напишите <span style="color:#fc0303; font-weight:bold;">@sscv</span> в личку
-  </p>
-
-  <h3>Пояснения по цветам:</h3>
-  <ul class="color-legend">
-    <li><span style="color:#00bfff; font-weight:bold;">Голубой</span> — не требуется набирать очки</li>
-    <li><span style="color:#888888; font-weight:bold;">Серый</span> — ливнул</li>
-    <li><span style="color:#00ff88; font-weight:bold;">Зелёный</span> — молодец</li>
-    <li><span style="color:#ffff00; font-weight:bold;">Жёлтый</span> — почти молодец (набрал ≥50% от цели)</li>
-    <li><span style="color:#e0e0e0; font-weight:bold;">Белый</span> — всё остальное</li>
-    <li><span style="color:#ffa500; font-weight:bold;">Оранжевый</span> — ментор</li>
-    <li><span style="color:#be03fc; font-weight:bold;">Фиолетовый</span> — рекрутер</li>
-    <li><span style="color:#fc0303; font-weight:bold;">Красный</span> — офицер</li>
-  </ul>
-
-  <p class="rules-link">
-    <a href='https://discordapp.com/channels/1355240968621658242/1369330940551106665' target='_blank'>правила-посещения</a>
-  </p>
-</div>
 
 <div class="filter-bar">
   <input id="nickFilter" type="text" placeholder="Поиск по нику…" autocomplete="off" />
@@ -37,39 +11,13 @@
       <th>Ник</th>
       <th>нажми на меня</th>
       <th>Количество посещенного контента</th>
-      <th>Сумма очков</th>
-      <th>Цель (нужно набрать очков в этом месяце)</th>
+      <th>Серебра (на счету гильдии)</th>
     </tr>
   </thead>
   <tbody>
-    <!-- D9dka — special row -->
-    <!-- <tr style="color: #310036; font-weight: bold; background-color: #999;">
-      <td>D9dka</td>
-      <td>—</td>
-      <td>∞</td>
-      <td>∞</td>
-      <td>0</td>
-    </tr> -->
 
     <!-- Dynamic user rows -->
     {% for row in rows %}
-      {% set color = '' %}
-      {% if row['liable'] == 0 %}
-        {% set color = '#00bfff' %}     {# голубой #}
-      {% elif row['liable'] == 2 %}
-        {% set color = '#fc0303' %}     {# красный #}
-      {% elif row['liable'] == 3 %}
-        {% set color = '#ffa500' %}     {# оранжевый #}
-      {% elif row['liable'] == 4 %}
-        {% set color = '#be03fc' %}     {# фиолетовый #}
-      {% elif row['is_member'] == 0 %}
-        {% set color = '#888888' %}     {# серый #}
-      {% elif row['total_points'] >= row['need_to_get'] %}
-        {% set color = '#00ff88' %}     {# зелёный #}
-      {% elif row['total_points'] >= row['need_to_get'] * 0.5 %}
-        {% set color = '#ffff00' %}     {# жёлтый #}
-      {% endif %}
-
       <tr style="color: {{ color if color else '#e0e0e0' }}">
         <td>{{ row['display_name'] or '—' }}</td>
         <td>
@@ -78,8 +26,11 @@
           </a>
         </td>
         <td>{{ row['event_count'] }}</td>
-        <td>{{ row['total_points'] or 0 }}</td>
-        <td>{{ row['need_to_get'] }}</td>
+        <td>
+          <a href="{{ url_for('payment_detail', uid=row['uid']) }}{% if db_param %}?db={{ db_param }}{% endif %}">
+          {{ row['total_amount'] | money }}
+          </a>
+        </td>
       </tr>
     {% endfor %}
   </tbody>

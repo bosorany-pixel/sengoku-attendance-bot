@@ -1,0 +1,42 @@
+services:
+  discord-bot:
+    build: .
+    container_name: discord-bot
+    volumes:
+      - ./bot_data:/app/bot_data
+      - /mnt/db:/db
+    env_file: .env.example
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: sengoku-api
+    ports:
+      - "8100:8000"
+    environment:
+      - DB_PATH=/db/sengoku_bot.db
+      - API_PORT=8000
+      - TECHNICAL_TIMEOUT=${TECHNICAL_TIMEOUT:-0}
+    volumes:
+      - /mnt/db:/db
+      - /mnt/archives:/app/archives
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: sengoku-frontend
+    ports:
+      - "8101:80"
+    depends_on:
+      - api
+    restart: unless-stopped

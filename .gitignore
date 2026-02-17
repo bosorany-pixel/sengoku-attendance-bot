@@ -5,4 +5,12 @@ __pycache__/
 *.log
 *.sh
 *.txt
+# Keep requirements files for Python/Node
+!**/requirements.txt
+!**/package-lock.json
 *temp*
+photoes/*
+*.png
+*.csv
+.env
+*.md

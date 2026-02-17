@@ -7,7 +7,18 @@ import dotenv
 
 dotenv.load_dotenv()
 
+sql_path = "/mnt/db"
+if os.path.exists("/db"):
+    sql_path = "/db"
+elif not os.path.exists("/mnt/db"):
+    raise "I need a db path"
+
+
 app = Flask(__name__)
+DB_PATH = os.environ.get("DB_PATH", os.path.join(
+            sql_path,
+            'sengoku_bot.db'
+        ))
 
 DB_PATH = os.environ.get(
     "DB_PATH",
@@ -34,10 +45,16 @@ with open(
 ) as f:
     USER_HTML = f.read()
 
-with open(
-    os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "timeout.html"),
-    encoding="utf-8",
-) as f:
+with open(os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    'static', 'payments.html'
+)) as f:
+    PAYMENTS_HTML = f.read()
+
+with open(os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    'static', 'timeout.html'
+)) as f:
     TECHNICAL_TIMEOUT_HTML = f.read()
 
 
@@ -202,23 +219,36 @@ def index():
         )
 
     db = get_db(db_path)
-    q = db.execute(
-        """
-      SELECT u.uid,
-           COALESCE(NULLIF(u.server_username, ''), u.global_username) AS display_name,
-           u.liable,
-           COUNT(DISTINCT CASE WHEN e.disband != 1 THEN e.message_id END) AS event_count,
-           COALESCE(SUM(CASE WHEN e.disband != 1 THEN e.points ELSE 0 END), 0) AS total_points,
-           u.need_to_get,
-           u.is_member
-      FROM USERS u
-      LEFT JOIN EVENTS_TO_USERS etu ON etu.ds_uid = u.uid
-      LEFT JOIN EVENTS e ON e.message_id = etu.message_id
-      WHERE COALESCE(NULLIF(u.server_username, ''), u.global_username) != 'D9dka'
-      GROUP BY u.uid
-      ORDER BY total_points DESC, event_count DESC, display_name COLLATE NOCASE ASC
-    """
-    )
+    q = db.execute("""
+SELECT
+    u.uid,
+    COALESCE(NULLIF(u.server_username, ''), u.global_username) AS display_name,
+    COALESCE(ev.event_count, 0) AS event_count,
+    COALESCE(pay.total_amount, 0) AS total_amount
+FROM USERS u
+
+LEFT JOIN (
+    SELECT
+        etu.ds_uid AS uid,
+        COUNT(DISTINCT CASE WHEN e.disband != 1 THEN e.message_id END) AS event_count
+    FROM EVENTS_TO_USERS etu
+    JOIN EVENTS e ON e.message_id = etu.message_id
+    GROUP BY etu.ds_uid
+) ev ON ev.uid = u.uid
+
+LEFT JOIN (
+    SELECT
+        ul.ds_uid AS uid,
+        ROUND(SUM((p.payment_ammount * 1.0) / NULLIF(p.user_amount * 1.0, 0)), 2) AS total_amount
+    FROM PAYMENTS p
+    JOIN PAYMENTS_TO_USERS ul ON p.message_id = ul.message_id
+    GROUP BY ul.ds_uid
+) pay ON pay.uid = u.uid
+
+WHERE COALESCE(NULLIF(u.server_username, ''), u.global_username) != 'D9dka'
+ORDER BY total_amount DESC, event_count DESC, display_name COLLATE NOCASE ASC;
+
+    """)
     rows = q.fetchall()
 
     archives = get_archives()
@@ -239,7 +269,14 @@ def index():
     )
 
 
-@app.route("/user/<int:uid>")
+@app.template_filter("money")
+def money(v):
+    if v is None:
+        return "—"
+    return f"{v:,}".replace(",", " ")
+
+ 
+@app.route('/user/<int:uid>')
 def user_detail(uid):
     db_param = request.args.get("db")
     db_path, history_title = resolve_db_path(db_param)
@@ -292,6 +329,43 @@ def user_detail(uid):
         archives=archives,
         db_param=db_param,
     )
+
+
+@app.route('/payment/<int:uid>')
+def payment_detail(uid):
+    db_param = request.args.get('db')
+    db_path = None
+    history_title = None
+    if db_param:
+        if not re.match(r'^[a-z]+_\d{4}$', db_param):
+            abort(404)
+        db_path = os.path.join(ARCHIVE_DIR, f"{db_param}.db")
+        if not os.path.exists(db_path):
+            abort(404)
+        history_title = ' '.join([word.capitalize() for word in db_param.split('_')])
+    
+    db = get_db(db_path)
+    uq = db.execute("SELECT uid, COALESCE(NULLIF(global_username, ''), server_username) AS display_name FROM USERS WHERE uid=?", (uid,))
+    user = uq.fetchone()
+    if not user:
+        abort(404)
+    eq = db.execute("""
+            select ROUND((p.payment_ammount * 1.0) / (p.user_amount * 1.0), 2) as payment_sum, p.message_id, p.channel_id, p.guild_id, p.payment_ammount, p.user_amount, p.pay_time
+            from PAYMENTS p
+            join PAYMENTS_TO_USERS ul on p.message_id = ul.message_id
+            where ul.ds_uid = ?
+    """, (uid,))
+    payments = eq.fetchall()
+
+    archives = get_archives()
+    
+    subtitle = f"{len(payments)} выплат мембера {uq}"
+    if history_title:
+        subtitle = f"{subtitle} (Historical: {history_title})"
+    
+    html = render_template_string(PAYMENTS_HTML, events=payments, db_param=db_param)
+    return render_template_string(BASE_HTML, title=f"{user['display_name'] or 'без имени'}", subtitle=subtitle, content=html, archives=archives, db_param=db_param)
+
 
 
 from werkzeug.middleware.proxy_fix import ProxyFix

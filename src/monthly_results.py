@@ -11,9 +11,9 @@ import sqlite3
 from datetime import datetime, timedelta
 import sys
 import dotenv
-import datatypes
-import CONSTANTS
-import logger
+import src.datatypes as datatypes
+import src.CONSTANTS as CONSTANTS
+import src.logger as logger
 dotenv.load_dotenv()
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))

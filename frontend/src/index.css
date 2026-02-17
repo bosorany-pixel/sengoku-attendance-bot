@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-dark-bg text-dark-text font-sans;
+  }
+  
+  a {
+    @apply text-accent-blue hover:underline transition-colors;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-white;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-dark-card text-dark-text border border-dark-border rounded px-3 py-2 hover:bg-opacity-80 transition-colors cursor-pointer;
+  }
+  
+  .table-row {
+    @apply border-b border-dark-border hover:bg-dark-card transition-colors cursor-pointer;
+  }
+  
+  .input-search {
+    @apply bg-dark-card text-dark-text border border-dark-border rounded px-3 py-2 focus:outline-none focus:border-accent-blue;
+  }
+}
