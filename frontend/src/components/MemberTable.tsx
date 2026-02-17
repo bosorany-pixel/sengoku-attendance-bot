@@ -74,9 +74,6 @@ export function MemberTable({ members }: MemberTableProps) {
                   Ник
                 </th>
                 <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-dark-textLight">
-                  нажми на меня
-                </th>
-                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-dark-textLight">
                   Посещений
                 </th>
                 <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-dark-textLight last:rounded-tr-2xl">
@@ -101,16 +98,13 @@ export function MemberTable({ members }: MemberTableProps) {
                       {member.display_name || '—'}
                     </Link>
                   </td>
-                  <td className="px-4 py-3 text-dark-textLight text-sm">
+                  <td className="px-4 py-3 tabular-nums">
                     <Link
                       to={`/member/${member.uid}${dbQuery ? `${dbQuery}&tab=events` : '?tab=events'}`}
                       className="text-accent-blue hover:underline transition-colors duration-200"
                     >
-                      {member.uid}
+                      {member.event_count}
                     </Link>
-                  </td>
-                  <td className="px-4 py-3 text-dark-text tabular-nums">
-                    {member.event_count}
                   </td>
                   <td className="px-4 py-3 tabular-nums">
                     <Link

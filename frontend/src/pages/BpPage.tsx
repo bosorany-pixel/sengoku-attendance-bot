@@ -104,7 +104,7 @@ export function BpPage() {
                 </span>
               </div>
               <div className="flex flex-col items-center">
-                <span className="text-dark-textLight text-xs uppercase tracking-wider">очков до следующего левела</span>
+                <span className="text-dark-textLight text-xs uppercase tracking-wider">Посещений до следующего левела</span>
                 <span className={`mt-1 text-lg font-semibold tabular-nums ${pointsToNextLevel !== null && pointsToNextLevel > 0 ? 'text-accent-green' : 'text-white'}`}>
                   {pointsToNextLevel !== null ? pointsToNextLevel : '—'}
                 </span>
