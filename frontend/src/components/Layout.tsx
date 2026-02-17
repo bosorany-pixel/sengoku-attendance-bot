@@ -6,22 +6,23 @@ interface LayoutProps {
   children: ReactNode;
   title: string;
   subtitle: string;
+  showSidebar?: boolean;
 }
 
-export function Layout({ children, title, subtitle }: LayoutProps) {
+export function Layout({ children, title, subtitle, showSidebar = true }: LayoutProps) {
   return (
     <div className="min-h-screen bg-dark-bg p-5">
       <div className="container mx-auto max-w-7xl">
         <div className="flex flex-col lg:flex-row gap-5">
-          <Sidebar />
+          {showSidebar && <Sidebar />}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
             className="flex-1 text-center"
           >
-            <h1 className="text-4xl font-bold text-white mb-2">{title}</h1>
-            <p className="text-dark-textLight mb-5">{subtitle}</p>
+            <h1 className="font-display text-4xl font-semibold text-white mb-2 tracking-tight">{title}</h1>
+            <p className="font-display text-dark-textLight mb-6 text-sm tracking-wide">{subtitle}</p>
             {children}
           </motion.div>
         </div>

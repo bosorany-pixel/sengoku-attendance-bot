@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useLevelsAndAchievements } from '../hooks/useLevels';
 import { useUserAchievements } from '../hooks/useUserAchievements';
 import { useMembers } from '../hooks/useMembers';
@@ -62,7 +62,7 @@ export function BpPage() {
 
   if (error) {
     return (
-      <Layout title="Ошибка" subtitle="Не удалось загрузить данные">
+      <Layout title="Ошибка" subtitle="Не удалось загрузить данные" showSidebar={false}>
         <div className="text-red-400">
           {error instanceof Error ? error.message : 'Unknown error'}
         </div>
@@ -72,7 +72,7 @@ export function BpPage() {
 
   if (isLoading || !levelsData) {
     return (
-      <Layout title="Батлпас" subtitle="Загрузка...">
+      <Layout title="Батлпас" subtitle="Загрузка..." showSidebar={false}>
         <LoadingSpinner />
       </Layout>
     );
@@ -81,13 +81,19 @@ export function BpPage() {
   const subtitle = userId ? `Батлпас · ${displayName}` : 'Батлпас';
 
   return (
-    <Layout title="Батлпас" subtitle={subtitle}>
+    <Layout title="Батлпас" subtitle={subtitle} showSidebar={false}>
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35 }}
         className="max-w-2xl mx-auto flex flex-col items-center text-center w-full px-2"
       >
+        <Link
+          to="/"
+          className="inline-flex items-center gap-1.5 text-accent-blue hover:underline text-sm mb-6"
+        >
+          ← На главную
+        </Link>
         {userId && (
           <div className="mb-10 w-full max-w-sm">
             <div className="bg-dark-card/80 border border-dark-border rounded-xl px-5 py-4 shadow-sm flex flex-col items-center gap-3">
