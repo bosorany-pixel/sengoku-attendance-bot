@@ -5,7 +5,7 @@ services:
     volumes:
       - ./bot_data:/app/bot_data
       - /mnt/db:/db
-    env_file: .env.example
+    env_file: .env
     restart: unless-stopped
 
   api:
