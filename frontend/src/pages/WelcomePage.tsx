@@ -347,10 +347,18 @@ export default function WelcomePage() {
 
   return (
     <div
-      className="min-h-screen bg-[#050607] text-white"
+      className="min-h-screen bg-[#050607] text-white welcome-glow-on-load"
       onMouseMove={handleMouseMove}
       onMouseLeave={() => setMouse({ x: 50, y: 50 })}
     >
+      {/* Gold wash on open: fades out over 1s */}
+      <div
+        className="welcome-glow-overlay pointer-events-none fixed inset-0 z-[2]"
+        style={{
+          background: "radial-gradient(ellipse 120% 80% at 50% 30%, rgba(255,215,128,0.35) 0%, rgba(255,200,100,0.18) 40%, rgba(255,180,80,0.06) 70%, transparent 100%)",
+        }}
+        aria-hidden
+      />
       {/* Cursor glow: gnomish lantern effect so text/letters glow under cursor */}
       <div
         className="pointer-events-none fixed inset-0 z-[1] opacity-60"
@@ -359,7 +367,7 @@ export default function WelcomePage() {
         }}
         aria-hidden
       />
-      <div className="relative z-10">
+      <div className="welcome-text-glow relative z-10">
       <div className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-black/40 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3">
           <Link to="/" className="flex items-center gap-3 text-white hover:text-white/90 focus:outline-none focus:underline">
@@ -393,7 +401,16 @@ export default function WelcomePage() {
 
       <section ref={heroRef} className="relative min-h-[92vh] pt-16">
         <div className="absolute inset-0">
-          <div className="absolute inset-0 opacity-80 [background:radial-gradient(circle_at_40%_30%,rgba(255,210,120,0.12),transparent_55%),radial-gradient(circle_at_70%_65%,rgba(120,170,255,0.10),transparent_60%),linear-gradient(to_bottom,rgba(0,0,0,0.55),rgba(0,0,0,0.92))]" />
+          <div
+            className="absolute inset-0 opacity-90"
+            style={{
+              background: [
+                "radial-gradient(ellipse 100% 80% at 40% 30%, rgba(255,210,120,0.14) 0%, rgba(255,210,120,0.10) 28%, rgba(255,208,115,0.06) 48%, rgba(255,200,100,0.02) 65%, transparent 78%)",
+                "radial-gradient(ellipse 100% 85% at 70% 65%, rgba(120,170,255,0.12) 0%, rgba(120,168,252,0.08) 30%, rgba(130,178,255,0.04) 52%, rgba(140,188,255,0.01) 70%, transparent 82%)",
+                "linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.68) 50%, rgba(0,0,0,0.9) 100%)",
+              ].join(", "),
+            }}
+          />
           <FloatingRunes />
         </div>
 
@@ -477,8 +494,8 @@ export default function WelcomePage() {
           </h1>
 
           <p className="mt-5 max-w-2xl text-base text-white/70 md:text-lg">
-            Мория, руны, рейды и нормальные люди
-            <span className="text-white/50"> без налогов и бюрократии</span>
+            Ну тут текст чисто рандомно сейчас накидан
+            <span className="text-white/50"> потом и текст напишем нормальный</span>
             <span className="text-white/70"> • LFG каждый день • своя Ава-КП • доступ на мирку</span>
           </p>
 

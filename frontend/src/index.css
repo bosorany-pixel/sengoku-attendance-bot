@@ -130,4 +130,38 @@
     text-shadow: 0 0 20px rgba(255, 210, 120, 0.12),
                  0 0 40px rgba(255, 180, 80, 0.06);
   }
+
+  /* Welcome page: gold wash on open — 80% → 100% → 0% in 1.5s */
+  @keyframes welcomeGoldWash {
+    0% {
+      opacity: 0.8;
+    }
+    20% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+  @keyframes welcomeLineGlow {
+    0% {
+      text-shadow: 0 0 20px rgba(255, 215, 128, 0.7),
+                   0 0 40px rgba(255, 210, 120, 0.35);
+    }
+    20% {
+      text-shadow: 0 0 24px rgba(255, 215, 128, 0.85),
+                   0 0 48px rgba(255, 210, 120, 0.45);
+    }
+    100% {
+      text-shadow: 0 0 8px rgba(255, 215, 128, 0.15),
+                   0 0 16px rgba(255, 180, 80, 0.08);
+    }
+  }
+  .welcome-glow-on-load .welcome-glow-overlay {
+    animation: welcomeGoldWash 1.5s ease-out forwards;
+  }
+  .welcome-glow-on-load .welcome-text-glow,
+  .welcome-glow-on-load .welcome-text-glow * {
+    animation: welcomeLineGlow 1.5s ease-out forwards;
+  }
 }
