@@ -168,3 +168,44 @@ def get_user_payments(uid: str, db_path: Optional[str] = None) -> List[Dict[str,
         cursor = conn.execute(query, (int(uid),))  # Convert to int for DB query
         rows = cursor.fetchall()
         return [dict(row) for row in rows]
+
+
+def get_levels_and_achievements(db_path: Optional[str] = None) -> Dict[str, List[Dict[str, Any]]]:
+    """
+    Get all BP levels and all achievements from the main database (read-only).
+    Returns {"levels": [{"level": int, "attendance": int}, ...], "achievements": [{"id": int, "bp_level": int, "description": str, "picture": str}, ...]}.
+    """
+    levels_query = "SELECT level, attendence FROM BP_LEVELS ORDER BY level ASC"
+    achievements_query = (
+        "SELECT id, bp_level, description, picture FROM ACHIVEMENTS ORDER BY bp_level ASC, id ASC"
+    )
+    with get_db_connection(db_path) as conn:
+        cursor = conn.execute(levels_query)
+        levels = [{"level": row[0], "attendance": row[1]} for row in cursor.fetchall()]
+        cursor = conn.execute(achievements_query)
+        achievements = [
+            {"id": row[0], "bp_level": row[1], "description": row[2] or "", "picture": row[3] or ""}
+            for row in cursor.fetchall()
+        ]
+    return {"levels": levels, "achievements": achievements}
+
+
+def get_user_achievements(uid: str, db_path: Optional[str] = None) -> List[Dict[str, Any]]:
+    """
+    Get all achievements granted to a user (from ACHIVEMENTS_TO_USERS + ACHIVEMENTS). Read-only.
+    Returns list of {"id": int, "bp_level": int, "description": str, "picture": str}.
+    """
+    query = """
+        SELECT a.id, a.bp_level, a.description, a.picture
+        FROM ACHIVEMENTS a
+        JOIN ACHIVEMENTS_TO_USERS atu ON atu.achivement_id = a.id
+        WHERE atu.ds_uid = ?
+        ORDER BY a.bp_level ASC, a.id ASC
+    """
+    with get_db_connection(db_path) as conn:
+        cursor = conn.execute(query, (int(uid),))
+        rows = cursor.fetchall()
+        return [
+            {"id": row[0], "bp_level": row[1], "description": row[2] or "", "picture": row[3] or ""}
+            for row in rows
+        ]

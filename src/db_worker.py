@@ -474,6 +474,18 @@ VALUES (?, ?)
             (uid,),
         )
 
+    def calculate_all_users_achivements(self) -> list[tuple]:
+        """
+        Run calculate_user_achivements for every user in USERS.
+        Returns list of (uid, achievement_count) for each user after sync.
+        """
+        uids = [row[0] for row in self.fetchall("SELECT uid FROM USERS", ())]
+        result = []
+        for uid in uids:
+            achievements = self.calculate_user_achivements(uid)
+            result.append((uid, len(achievements)))
+        return result
+
 
 def format_sqlite_rows(rows, headers=None, max_rows=20):
     if not rows:

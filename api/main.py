@@ -16,6 +16,8 @@ try:
         get_user_payments,
         get_archives,
         get_archive_path,
+        get_levels_and_achievements,
+        get_user_achievements,
     )
     from models import (
         MembersListResponse,
@@ -28,6 +30,10 @@ try:
         PaymentResponse,
         UserDetailResponse,
         ArchiveResponse,
+        LevelsAndAchievementsResponse,
+        UserAchievementsResponse,
+        LevelResponse,
+        AchievementResponse,
     )
 except ImportError:
     from api.database import (
@@ -37,6 +43,8 @@ except ImportError:
         get_user_payments,
         get_archives,
         get_archive_path,
+        get_levels_and_achievements,
+        get_user_achievements,
     )
     from api.models import (
         MembersListResponse,
@@ -49,6 +57,10 @@ except ImportError:
         PaymentResponse,
         UserDetailResponse,
         ArchiveResponse,
+        LevelsAndAchievementsResponse,
+        UserAchievementsResponse,
+        LevelResponse,
+        AchievementResponse,
     )
 
 
@@ -166,34 +178,72 @@ async def get_member_payments(
 ):
     """
     Get all payments for a specific member.
-    
+
     Path Parameters:
     - uid: User ID (Discord UID)
-    
+
     Query Parameters:
     - db: Optional archive database name in format {month}_{year}
     """
     db_path = None
-    
+
     if db:
         db_path = get_archive_path(db)
         if not db_path:
             raise HTTPException(status_code=404, detail="Archive database not found")
-    
+
     try:
         # Get user details
         user_data = get_user(uid, db_path)
         if not user_data:
             raise HTTPException(status_code=404, detail="User not found")
-        
+
         # Get user payments
         payments_data = get_user_payments(uid, db_path)
         payments = [PaymentResponse(**payment) for payment in payments_data]
-        
+
         return {
             "user": UserDetailResponse(**user_data),
             "payments": payments,
             "total_count": len(payments),
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+
+@app.get("/api/levels", response_model=LevelsAndAchievementsResponse)
+async def list_levels_and_achievements():
+    """
+    Get all available BP levels and achievements (no user data).
+    Uses the main database only; read-only.
+    """
+    try:
+        data = get_levels_and_achievements()
+        return {
+            "levels": [LevelResponse(**lev) for lev in data["levels"]],
+            "achievements": [AchievementResponse(**a) for a in data["achievements"]],
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+
+@app.get("/api/members/{uid}/achievements", response_model=UserAchievementsResponse)
+async def get_member_achievements(uid: str):
+    """
+    Get all achievements achieved by a specific member.
+    Uses the main database only; read-only.
+    """
+    try:
+        user_data = get_user(uid, None)
+        if not user_data:
+            raise HTTPException(status_code=404, detail="User not found")
+        achievements_data = get_user_achievements(uid, None)
+        return {
+            "user": UserDetailResponse(**user_data),
+            "achievements": [AchievementResponse(**a) for a in achievements_data],
+            "total_count": len(achievements_data),
         }
     except HTTPException:
         raise

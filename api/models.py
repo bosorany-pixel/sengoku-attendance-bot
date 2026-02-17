@@ -86,3 +86,30 @@ class HealthResponse(BaseModel):
     """Response for health check endpoint."""
     status: str
     technical_timeout: bool
+
+
+class LevelResponse(BaseModel):
+    """Response model for a BP level (attendance threshold)."""
+    level: int
+    attendance: int
+
+
+class AchievementResponse(BaseModel):
+    """Response model for an achievement."""
+    id: int
+    bp_level: int
+    description: str
+    picture: str
+
+
+class LevelsAndAchievementsResponse(BaseModel):
+    """Response for levels and achievements list endpoint (no user data)."""
+    levels: List[LevelResponse]
+    achievements: List[AchievementResponse]
+
+
+class UserAchievementsResponse(BaseModel):
+    """Response for user achievements endpoint."""
+    user: UserDetailResponse
+    achievements: List[AchievementResponse]
+    total_count: int
