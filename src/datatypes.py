@@ -134,3 +134,20 @@ class Website():
     def close(self):
         self._set_technical_timeout('1')
         os.system(f"pm2 restart {self.PM2_WEBSITE_NAME}")
+
+    class Achivement():
+        id: int
+        bp_level: int
+        description: str
+        picture: str
+        def __init__(
+            self,
+            id: int,
+            bp_level: int,
+            description: str,
+            picture: str
+        ):
+            self.id = id
+            self.bp_level = bp_level
+            self.description = description
+            self.picture = picture

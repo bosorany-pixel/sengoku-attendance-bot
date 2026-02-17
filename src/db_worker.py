@@ -79,6 +79,31 @@ CREATE TABLE IF NOT EXISTS PAYMENTS (
 )
 ''')
         self.cursor.execute('''
+CREATE TABLE IF NOT EXISTS ACHIVEMENTS (
+    id INTEGER PRIMARY KEY,
+    bp_level INTEGER,
+    description TEXT,
+    picture TEXT DEFAULT ''
+)
+''')
+        self.cursor.execute('''
+CREATE TABLE IF NOT EXISTS BP_LEVELS (
+    attendence INTEGER,
+    level INTEGER
+)
+''')
+        self.cursor.execute('''
+CREATE TABLE IF NOT EXISTS ACHIVEMENTS_TO_USERS (
+    ds_uid INTEGER,
+    achivement_id INTEGER,
+    created DATETIME,
+    taken INTEGER default 1,
+    PRIMARY KEY (ds_uid, achivement_id),
+    FOREIGN KEY (ds_uid) REFERENCES USERS(uid),
+    FOREIGN KEY (achivement_id) REFERENCES ACHIVEMENTS(id)
+);
+        ''')
+        self.cursor.execute('''
 CREATE TABLE IF NOT EXISTS PAYMENTS_TO_USERS (
     ds_uid INTEGER,
     message_id INTEGER,
@@ -307,7 +332,148 @@ VALUES (?, ?)
             """,
             (top_n,),
         )
-    
+
+    # --- BP_LEVELS and ACHIVEMENTS (modular, no changes to existing code) ---
+
+    def get_bp_levels(self) -> list[tuple]:
+        """Return list of (level, attendance) ordered by level."""
+        return self.fetchall(
+            "SELECT level, attendence FROM BP_LEVELS ORDER BY level ASC",
+            (),
+        )
+
+    def get_all_achievements(self) -> list[tuple]:
+        """Return list of (id, bp_level, description, picture)."""
+        return self.fetchall(
+            "SELECT id, bp_level, description, picture FROM ACHIVEMENTS ORDER BY bp_level ASC, id ASC",
+            (),
+        )
+
+    def get_achievement_by_level(self, level: int) -> tuple | None:
+        """Return (id, bp_level, description, picture) for achievement at this level or None."""
+        row = self.fetchone(
+            "SELECT id, bp_level, description, picture FROM ACHIVEMENTS WHERE bp_level = ? LIMIT 1",
+            (level,),
+        )
+        return row if row else None
+
+    def get_achievement_by_id(self, achivement_id: int) -> tuple | None:
+        """Return (id, bp_level, description, picture) or None."""
+        row = self.fetchone(
+            "SELECT id, bp_level, description, picture FROM ACHIVEMENTS WHERE id = ?",
+            (achivement_id,),
+        )
+        return row if row else None
+
+    def set_level_attendance(self, level: int, attendance: int) -> None:
+        """Set or update attendance threshold for a level. Creates row if level missing."""
+        self.cursor.execute(
+            "UPDATE BP_LEVELS SET attendence = ? WHERE level = ?",
+            (attendance, level),
+        )
+        self.conn.commit()
+        if self.cursor.rowcount == 0:
+            self.execute(
+                "INSERT INTO BP_LEVELS (attendence, level) VALUES (?, ?)",
+                (attendance, level),
+                commit=True,
+            )
+
+    def set_achievement_for_level(self, level: int, description: str, picture: str = "") -> None:
+        """Create or update the achievement for this bp_level (single achievement per level)."""
+        row = self.get_achievement_by_level(level)
+        if row:
+            self.execute(
+                "UPDATE ACHIVEMENTS SET description = ?, picture = ? WHERE id = ?",
+                (description, picture or "", row[0]),
+                commit=True,
+            )
+        else:
+            self.execute(
+                "INSERT INTO ACHIVEMENTS (bp_level, description, picture) VALUES (?, ?, ?)",
+                (level, description, picture or ""),
+                commit=True,
+            )
+
+    def create_achievement(self, bp_level: int, description: str, picture: str = "") -> int:
+        """Insert a new achievement. Returns new id."""
+        self.cursor.execute(
+            "INSERT INTO ACHIVEMENTS (bp_level, description, picture) VALUES (?, ?, ?)",
+            (bp_level, description, picture or ""),
+        )
+        self.conn.commit()
+        return self.cursor.lastrowid
+
+    def update_achievement(
+        self, achivement_id: int, bp_level: int, description: str, picture: str = ""
+    ) -> bool:
+        """Update existing achievement. Returns True if a row was updated."""
+        self.cursor.execute(
+            "UPDATE ACHIVEMENTS SET bp_level = ?, description = ?, picture = ? WHERE id = ?",
+            (bp_level, description, picture or "", achivement_id),
+        )
+        self.conn.commit()
+        return self.cursor.rowcount > 0
+
+    def delete_achievement(self, achivement_id: int) -> bool:
+        """Delete achievement by id. Returns True if a row was deleted."""
+        self.cursor.execute("DELETE FROM ACHIVEMENTS WHERE id = ?", (achivement_id,))
+        self.conn.commit()
+        return self.cursor.rowcount > 0
+
+    def _get_user_attendance(self, uid: int) -> int:
+        """Count user's attendance: distinct non-disbanded events they participated in."""
+        row = self.fetchone(
+            """
+            SELECT COUNT(DISTINCT etu.message_id)
+            FROM EVENTS_TO_USERS etu
+            JOIN EVENTS e ON e.message_id = etu.message_id
+            WHERE etu.ds_uid = ? AND (e.disband IS NULL OR e.disband != 1)
+            """,
+            (uid,),
+        )
+        return row[0] if row else 0
+
+    def calculate_user_achivements(self, uid: int) -> list[tuple]:
+        """
+        Calculate user's level from attendance, sync ACHIVEMENTS_TO_USERS with all
+        achievements they should have, and return those achievements.
+        Returns list of (id, bp_level, description, picture) for the user.
+        """
+        attendance = self._get_user_attendance(uid)
+        levels = self.get_bp_levels()
+        levels_reached = sorted(set(lev for lev, thresh in levels if attendance >= thresh))
+        if not levels_reached:
+            return []
+
+        placeholders = ",".join("?" * len(levels_reached))
+        achievements_to_grant = self.fetchall(
+            f"SELECT id, bp_level, description, picture FROM ACHIVEMENTS WHERE bp_level IN ({placeholders})",
+            tuple(levels_reached),
+        )
+        now_utc = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        for row in achievements_to_grant:
+            aid = row[0]
+            self.cursor.execute(
+                """
+                INSERT OR IGNORE INTO ACHIVEMENTS_TO_USERS (ds_uid, achivement_id, created, taken)
+                VALUES (?, ?, ?, 1)
+                """,
+                (uid, aid, now_utc),
+            )
+        self.conn.commit()
+
+        return self.fetchall(
+            """
+            SELECT a.id, a.bp_level, a.description, a.picture
+            FROM ACHIVEMENTS a
+            JOIN ACHIVEMENTS_TO_USERS atu ON atu.achivement_id = a.id
+            WHERE atu.ds_uid = ?
+            ORDER BY a.bp_level ASC, a.id ASC
+            """,
+            (uid,),
+        )
+
 
 def format_sqlite_rows(rows, headers=None, max_rows=20):
     if not rows:

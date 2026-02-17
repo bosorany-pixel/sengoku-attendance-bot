@@ -17,6 +17,7 @@ import json
 from dotenv import load_dotenv
 
 from objects_tracker.commands import add_data, show_data, delete_data, set_allowed_roles, payments, attendance
+from objects_tracker.commands import achivements
 from objects_tracker.commands.add_from_image import add_from_image
 from objects_tracker.commands import on_message
 from objects_tracker.tasks import cleanup_data
@@ -66,6 +67,11 @@ bot.tree.add_command(payments.dec_payment)
 bot.tree.add_command(payments.get_balance)
 bot.tree.add_command(payments.top_balance)
 bot.tree.add_command(payments.add_to_payment)
+bot.tree.add_command(achivements.eddit_level)
+bot.tree.add_command(achivements.create_achievement)
+bot.tree.add_command(achivements.edit_achievement)
+bot.tree.add_command(achivements.delete_achievement)
+bot.tree.add_command(achivements.list_levels)
 # bot.tree.add_command(attendance.create_attendance)
 # bot.tree.add_command(attendance.add_attendense)
 bot.tree.add_command(add_from_image)
