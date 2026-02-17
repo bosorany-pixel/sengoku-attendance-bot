@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   discord-bot:
     build: .
@@ -7,17 +5,38 @@ services:
     volumes:
       - ./bot_data:/app/bot_data
       - /mnt/db:/db
-    env_file: .env
+    env_file: .env.example
     restart: unless-stopped
 
-  website:
+  api:
     build:
-      dockerfile: Dockerfile.app
-      context: src
-    container_name: attendense-payment-website
-    volumes:
-      - /mnt/db:/db
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: sengoku-api
     ports:
-      - "5003:5000"
-    env_file: .env
+      - "8000:8000"
+    environment:
+      - DB_PATH=/db/sengoku_bot.db
+      - API_PORT=8000
+      - TECHNICAL_TIMEOUT=${TECHNICAL_TIMEOUT:-0}
+    volumes:
+      - ./db:/db
+      - ./src/archives:/app/archives
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: sengoku-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - api
     restart: unless-stopped
