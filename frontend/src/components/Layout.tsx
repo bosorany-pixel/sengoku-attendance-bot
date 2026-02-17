@@ -11,7 +11,13 @@ interface LayoutProps {
 
 export function Layout({ children, title, subtitle, showSidebar = true }: LayoutProps) {
   return (
-    <div className="min-h-screen bg-dark-bg p-5">
+    <div
+      className="min-h-screen p-5"
+      style={{
+        background: 'linear-gradient(to top, #7f1d1d 0%, #1e1e1e 50%, #1e1e1e 100%)',
+        backgroundAttachment: 'fixed',
+      }}
+    >
       <div className="container mx-auto max-w-7xl">
         <div className="flex flex-col lg:flex-row gap-5">
           {showSidebar && <Sidebar />}
