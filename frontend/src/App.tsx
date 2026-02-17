@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MembersPage } from './pages/MembersPage';
 import { MemberDetailPage } from './pages/MemberDetailPage';
 import { TimeoutPage } from './pages/TimeoutPage';
+import WelcomePage from './pages/WelcomePage';
 
 function RedirectToMember({ tab }: { tab: string }) {
   const { uid } = useParams<{ uid: string }>();
@@ -27,6 +28,7 @@ function App() {
       <BrowserRouter basename={import.meta.env.BASE_URL}>
         <Routes>
           <Route path="/" element={<MembersPage />} />
+          <Route path="/welcome" element={<WelcomePage />} />
           <Route path="/member/:uid" element={<MemberDetailPage />} />
           <Route path="/user/:uid" element={<RedirectToMember tab="events" />} />
           <Route path="/payment/:uid" element={<RedirectToMember tab="payments" />} />

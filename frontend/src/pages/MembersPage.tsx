@@ -11,7 +11,7 @@ export function MembersPage() {
 
   if (error) {
     return (
-      <Layout title="Ошибка" subtitle="Не удалось загрузить данные">
+      <Layout title="Ошибка" subtitle="Не удалось загрузить данные" showSidebar={false}>
         <div className="text-red-400">
           Ошибка загрузки: {error instanceof Error ? error.message : 'Unknown error'}
         </div>
@@ -21,7 +21,7 @@ export function MembersPage() {
 
   if (isLoading || !members) {
     return (
-      <Layout title="мемберы × контент" subtitle="Загрузка...">
+      <Layout title="мемберы × контент" subtitle="Загрузка..." showSidebar={false}>
         <LoadingSpinner />
       </Layout>
     );
@@ -30,7 +30,7 @@ export function MembersPage() {
   const subtitle = `Всего мемберов: ${members.length}`;
 
   return (
-    <Layout title="MORDOR" subtitle={subtitle}>
+    <Layout title="MORDOR" titleHref="/welcome" subtitle={subtitle} showSidebar={false}>
       <MemberTable members={members} />
     </Layout>
   );

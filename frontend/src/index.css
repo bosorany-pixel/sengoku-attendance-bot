@@ -104,4 +104,30 @@
     animation: spark-rise ease-out infinite;
     will-change: transform, opacity;
   }
+
+  /* Welcome page: rune shimmer divider */
+  @keyframes shimmer {
+    from { transform: translateX(-30%); }
+    to { transform: translateX(30%); }
+  }
+
+  /* Welcome page: floating runes */
+  @keyframes floatRune {
+    0% { transform: translate3d(0,0,0) rotate(0deg); opacity: 0.25; }
+    50% { transform: translate3d(0,-18px,0) rotate(8deg); opacity: 0.55; }
+    100% { transform: translate3d(0,0,0) rotate(0deg); opacity: 0.25; }
+  }
+
+  /* Welcome page: contact CTA pulse glow */
+  @keyframes pulseGlow {
+    0% { transform: scale(0.98); opacity: 0.25; }
+    50% { transform: scale(1.04); opacity: 0.55; }
+    100% { transform: scale(0.98); opacity: 0.25; }
+  }
+
+  /* Welcome page: gnomish rune title glow */
+  .rune-title {
+    text-shadow: 0 0 20px rgba(255, 210, 120, 0.12),
+                 0 0 40px rgba(255, 180, 80, 0.06);
+  }
 }
