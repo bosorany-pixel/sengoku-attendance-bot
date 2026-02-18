@@ -88,6 +88,29 @@ function FloatingRunes() {
   )
 }
 
+const BASE = import.meta.env.BASE_URL
+
+function SectionImage({ src, alt = "" }: { src: string; alt?: string }) {
+  return (
+    <section className="pt-16">
+      <div className="relative h-[min(70vh,460px)] w-full overflow-hidden rounded-3xl">
+        <img
+          src={src}
+          alt={alt}
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        {/* Fade into darkness at top and bottom */}
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background: `linear-gradient(to bottom, #050607 0%, transparent 22%, transparent 78%, #050607 100%)`,
+          }}
+        />
+      </div>
+    </section>
+  )
+}
+
 export default function WelcomePage() {
   const heroRef = useRef<HTMLDivElement | null>(null)
   const doorsRef = useRef<HTMLDivElement | null>(null)
@@ -543,6 +566,8 @@ export default function WelcomePage() {
       </section>
 
       <main className="relative mx-auto max-w-6xl px-5 pb-24">
+        <SectionImage src={`${BASE}images/Dwarves.avif`} alt="Dwarves" />
+
         <section ref={aboutRef} className="pt-16">
           <div className="grid gap-10 md:grid-cols-2 md:items-start">
             <div>
@@ -605,6 +630,8 @@ export default function WelcomePage() {
             </div>
           </div>
         </section>
+
+        <SectionImage src={`${BASE}images/moria.jpg`} alt="Moria" />
 
         <section ref={mordorRef} className="pt-16">
           <div className="relative overflow-hidden rounded-3xl border border-amber-200/15 bg-gradient-to-b from-white/6 to-white/3">
@@ -682,6 +709,8 @@ export default function WelcomePage() {
           </div>
         </section>
 
+        <SectionImage src={`${BASE}images/mordor.jpg`} alt="mordor" />
+
         <section ref={perksRef} className="pt-16">
           <div className="flex items-end justify-between gap-6">
             <div>
@@ -730,6 +759,8 @@ export default function WelcomePage() {
             ))}
           </div>
         </section>
+
+        <SectionImage src={`${BASE}images/dwarfes_2.jpg`} alt="Dwarves" />
 
         <section ref={galleryRef} className="pt-16">
           <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
