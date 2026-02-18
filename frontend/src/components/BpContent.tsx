@@ -107,7 +107,7 @@ export function BpContent({ userId }: BpContentProps) {
               </span>
             </div>
             <div className="flex flex-col">
-              <span className="text-dark-textLight text-xs uppercase tracking-wider">Посещений до следующего левела</span>
+              <span className="text-dark-textLight text-xs uppercase tracking-wider">поинтов до следующего левела</span>
               <span className={`mt-1 text-lg font-semibold tabular-nums ${pointsToNextLevel !== null && pointsToNextLevel > 0 ? 'text-accent-green' : 'text-white'}`}>
                 {pointsToNextLevel !== null ? pointsToNextLevel : '—'}
               </span>
@@ -124,7 +124,7 @@ export function BpContent({ userId }: BpContentProps) {
             <p className="text-dark-textLight text-xs uppercase tracking-wider mb-3 text-left">Уровни</p>
             <div className="relative bg-dark-card/40 border border-dark-border rounded-2xl py-6 px-6 shadow-inner">
             <div
-              className="absolute flex flex-col items-center top-6 bottom-6"
+              className="absolute flex flex-col items-center top-6 bottom-6 z-20"
               style={{ left: '7rem' }}
               aria-hidden
             >
@@ -136,9 +136,11 @@ export function BpContent({ userId }: BpContentProps) {
                 const particleClass = dotWhite && !item.isNextLevel ? 'bp-particle-steady' : item.isNextLevel ? 'bp-particle-pulse' : '';
                 const dotExtraClass = dotWhite ? 'bg-white border-white bp-dot-glow' : item.isNextLevel ? 'bg-dark-border border-dark-border bp-dot-next-pulse' : 'bg-dark-border border-dark-border';
                 const rowHeightPx = getRowHeightPx(item.level, !!item.picture);
+                const isFirst = index === 0;
+                const isLast = index === levelsWithProgress.length - 1;
                 return (
                   <div key={item.level} className="flex flex-col items-center flex-shrink-0 w-0" style={{ height: `${rowHeightPx}px` }}>
-                    <div className={`bp-line-segment w-0.5 flex-1 min-h-[0.5rem] ${segAboveWhite ? 'bg-white' : 'bg-dark-border'}`} />
+                    <div className={`bp-line-segment w-0.5 ${isFirst ? 'flex-none h-0 min-h-0' : 'flex-1 min-h-[0.5rem]'} ${segAboveWhite ? 'bg-white' : 'bg-dark-border'}`} />
                     <div className="relative flex flex-shrink-0 items-center justify-center w-6 h-6">
                       {showParticles && particleClass && (
                         <>
@@ -164,7 +166,7 @@ export function BpContent({ userId }: BpContentProps) {
                         <div className={`flex-shrink-0 w-3.5 h-3.5 rounded-full border-2 relative z-10 ${dotExtraClass}`} />
                       )}
                     </div>
-                    <div className={`bp-line-segment w-0.5 flex-1 min-h-[0.5rem] ${segBelowWhite ? 'bg-white' : 'bg-dark-border'}`} />
+                    <div className={`bp-line-segment w-0.5 ${isLast ? 'flex-1 min-h-[0.5rem] opacity-0' : 'flex-1 min-h-[0.5rem]'} ${segBelowWhite ? 'bg-white' : 'bg-dark-border'}`} />
                   </div>
                 );
               })}

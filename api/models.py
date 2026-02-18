@@ -1,6 +1,6 @@
 """Pydantic models for API responses."""
 from typing import Optional, List
-from pydantic import BaseModel, Field, field_serializer
+from pydantic import BaseModel, field_serializer
 
 
 class MemberResponse(BaseModel):
@@ -28,6 +28,11 @@ class EventResponse(BaseModel):
     points: Optional[int]
     hidden: int
 
+    @field_serializer("message_id", "guild_id", "channel_id")
+    def serialize_snowflake(self, value: int) -> str:
+        """Serialize Discord snowflake IDs as strings to avoid JS number precision loss."""
+        return str(value)
+
 
 class PaymentResponse(BaseModel):
     """Response model for a payment."""
@@ -38,6 +43,11 @@ class PaymentResponse(BaseModel):
     payment_ammount: float
     user_amount: int
     pay_time: Optional[str]
+
+    @field_serializer("message_id", "guild_id", "channel_id")
+    def serialize_snowflake(self, value: int) -> str:
+        """Serialize Discord snowflake IDs as strings to avoid JS number precision loss."""
+        return str(value)
 
 
 class ArchiveResponse(BaseModel):

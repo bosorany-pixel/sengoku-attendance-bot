@@ -6,9 +6,9 @@ export interface Member {
 }
 
 export interface Event {
-  message_id: number;
-  guild_id: number;
-  channel_id: number;
+  message_id: string;  // Discord snowflake – string to avoid JS number precision loss
+  guild_id: string;
+  channel_id: string;
   channel_name: string;
   message_text: string;
   read_time: string | null;
@@ -18,9 +18,9 @@ export interface Event {
 }
 
 export interface Payment {
-  message_id: number;
-  guild_id: number;
-  channel_id: number;
+  message_id: string;  // Discord snowflake – string to avoid JS number precision loss
+  guild_id: string;
+  channel_id: string;
   payment_sum: number;
   payment_ammount: number;
   user_amount: number;

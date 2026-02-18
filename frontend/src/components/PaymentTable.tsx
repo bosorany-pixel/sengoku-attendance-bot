@@ -12,7 +12,7 @@ function formatMoney(value: number): string {
 
 export function PaymentTable({ payments }: PaymentTableProps) {
   const getDiscordLink = (payment: Payment) => {
-    if (payment.channel_id === 0) return null;
+    if (payment.channel_id === '0') return null;
     return `https://discord.com/channels/${payment.guild_id}/${payment.channel_id}/${payment.message_id}`;
   };
 
