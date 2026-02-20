@@ -7,13 +7,13 @@ Results are cached for 24 hours; refetch only when cache is older than that.
 import json
 import re
 import time
-from datetime import datetime
+from datetime import datetime, date, timedelta
 from typing import Any
 
 import requests
 from bs4 import BeautifulSoup
 
-MORDOR_ATTENDANCE_URL = "https://europe.albionbb.com/guilds/nJTbhlRxTh2RAGMclSKk7A/attendance"
+MORDOR_ATTENDANCE_URL = "https://europe.albionbb.com/guilds/nJTbhlRxTh2RAGMclSKk7A/attendance?minPlayers=20&start="
 USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 CACHE_TTL_SECONDS = 24 * 3600  # 24 hours
 
@@ -39,7 +39,7 @@ def _parse_short_number(s: str) -> float | int:
             return 0
 
 
-def fetch_attendance_html(url: str = MORDOR_ATTENDANCE_URL) -> str:
+def fetch_attendance_html(url: str = MORDOR_ATTENDANCE_URL + (date.today() - timedelta(days=7)).strftime("%Y-%m-%d")) -> str:
     """Fetch the guild attendance page HTML."""
     resp = requests.get(url, headers={"User-Agent": USER_AGENT}, timeout=30)
     resp.raise_for_status()
@@ -244,7 +244,7 @@ def _build_response(
 ) -> dict[str, Any]:
     return {
         "guild_name": guild_name,
-        "source": "https://europe.albionbb.com/guilds/nJTbhlRxTh2RAGMclSKk7A/attendance",
+        "source": "https://europe.albionbb.com/",
         "summary": summary,
         "players_count": len(players),
         "players": players,
