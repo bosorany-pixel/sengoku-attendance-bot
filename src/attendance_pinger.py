@@ -103,7 +103,7 @@ async def run_pinger(client: discord.Client):
 
     to_ping = match_members_to_players(members, player_names)
     max_att = max(p.get("attendance", 0) for p in data.get("players") or [])
-    threshold = max_att / 2.0
+    threshold = max_att / 3.0
 
     header = (
         f"**Низкая посещаемость** (меньше половины от макс. {max_att} за неделю): "
