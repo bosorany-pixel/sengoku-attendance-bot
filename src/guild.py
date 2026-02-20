@@ -51,7 +51,7 @@ if __name__ == "__main__":
     @bot.event
     async def on_ready():
         print(f"bot ready as {bot.user}")
-        await get_nicks(guild_id=os.getenv("DISCORD_GUILD_ID"), bot=bot)
+        await get_nicks(guild_id=os.getenv("DISCORD_GUILD_ID"), local_bot=bot)
         await bot.close()
 
     bot.run(TOKEN)
