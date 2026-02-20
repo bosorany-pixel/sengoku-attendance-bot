@@ -6,10 +6,6 @@ from src.db_worker import DBWorker
 
 db_worker = DBWorker()
 
-# "Older than a week" in SQLite: last_pov < datetime('now', '-7 days')
-# Display name: same as API
-_DISPLAY_NAME_SQL = "COALESCE(NULLIF(server_username, ''), global_username)"
-
 
 def _check_allowed(interaction: discord.Interaction) -> bool:
     """Return True if user is allowed to run admin-level commands."""
@@ -34,7 +30,7 @@ async def pov_stats(interaction: discord.Interaction):
             f"""SELECT uid, server_username
                 FROM USERS
                 WHERE COALESCE(pov_count, 0) = 0 and server_username is not null and server_username!=''
-                ORDER BY display_name""",
+                ORDER BY server_username""",
             (),
         )
         # Users with last_pov older than 7 days (and have at least one POV)
