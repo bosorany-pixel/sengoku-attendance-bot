@@ -14,16 +14,6 @@ function formatMoney(value: number): string {
   return Math.round(value).toLocaleString('ru-RU').replace(/,/g, ' ');
 }
 
-function formatIsoDate(iso: string | null | undefined): string {
-  if (!iso) return '—';
-  try {
-    const d = new Date(iso);
-    return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  } catch {
-    return '—';
-  }
-}
-
 /** BP level from attendance: max level whose threshold <= eventCount */
 function getBpLevel(eventCount: number, levels: Level[]): number | null {
   if (!levels.length) return null;
@@ -105,10 +95,6 @@ export function MemberTable({ members }: MemberTableProps) {
                 <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-dark-textLight">
                   Уровень батлпаса
                 </th>
-                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-dark-textLight">
-                  <span className="block">Ссылки</span>
-                  <span className="block text-[11px] font-normal normal-case mt-0.5 text-dark-textLight/80">POV / проверено</span>
-                </th>
                 <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-dark-textLight last:rounded-tr-2xl">
                   <span className="block">Серебра</span>
                   <span className="block text-[11px] font-normal normal-case mt-0.5 text-dark-textLight/80 tabular-nums">
@@ -141,12 +127,6 @@ export function MemberTable({ members }: MemberTableProps) {
                     >
                       {getBpLevel(member.event_count, levels) ?? '0'}
                     </Link>
-                  </td>
-                  <td className="px-4 py-3 tabular-nums">
-                    <span className="block">{member.pov_count ?? 0} / {member.checked_pov_count ?? 0}</span>
-                    <span className="block text-[11px] text-dark-textLight/80 mt-0.5">
-                      {formatIsoDate(member.last_pov)} / {formatIsoDate(member.last_checked_pov)}
-                    </span>
                   </td>
                   <td className="px-4 py-3 tabular-nums">
                     <Link
