@@ -1,26 +1,10 @@
 """Stats commands (POV and similar)."""
-import os
 import discord
 from discord import app_commands
 from objects_tracker.utils.data_store import load_allowed_roles
 from src.db_worker import DBWorker
 
-
-def _get_db_path() -> str:
-    """Use same DB path as API so /pov_stats and API see the same data."""
-    path = os.environ.get("DB_PATH")
-    if path:
-        return path
-    sql_path = "/mnt/db"
-    if os.path.exists("/db"):
-        sql_path = "/db"
-    elif not os.path.exists("/mnt/db"):
-        base = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        sql_path = os.path.join(base, "db")
-    return os.path.join(sql_path, "sengoku_bot.db")
-
-
-db_worker = DBWorker(_get_db_path())
+db_worker = DBWorker()
 
 # "Older than a week" in SQLite: last_pov < datetime('now', '-7 days')
 # Display name: same as API
@@ -49,7 +33,7 @@ async def pov_stats(interaction: discord.Interaction):
         zero_pov = db_worker.fetchall(
             f"""SELECT uid, {_DISPLAY_NAME_SQL} AS display_name
                 FROM USERS
-                WHERE COALESCE(pov_count, 0) = 0
+                WHERE COALESCE(pov_count, 0) = 0 and server_username is not null
                 ORDER BY display_name""",
             (),
         )
@@ -83,7 +67,7 @@ async def pov_stats(interaction: discord.Interaction):
             value=truncate(week_list),
             inline=False,
         )
-        await interaction.followup.send(embed=embed, ephemeral=False)
+        await interaction.followup.send(embed=embed)
     except Exception as e:
         await interaction.followup.send(
             f"Ошибка: {e}", ephemeral=True
