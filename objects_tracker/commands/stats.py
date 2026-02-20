@@ -63,7 +63,7 @@ async def pov_stats(interaction: discord.Interaction):
             value=truncate(week_list),
             inline=False,
         )
-        await interaction.response.send_message(embed=embed)
+        await interaction.response.edit_message(embed=embed)
     except Exception as e:
         await interaction.followup.send(
             f"Ошибка: {e}", ephemeral=True
