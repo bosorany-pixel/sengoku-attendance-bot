@@ -3,6 +3,10 @@ export interface Member {
   display_name: string;
   event_count: number;
   total_amount: number;
+  pov_count: number;
+  checked_pov_count: number;
+  last_pov: string | null;
+  last_checked_pov: string | null;
 }
 
 export interface Event {
@@ -35,6 +39,10 @@ export interface Archive {
 export interface UserDetail {
   uid: string;  // Changed to string to handle large Discord UIDs
   display_name: string;
+  pov_count: number;
+  checked_pov_count: number;
+  last_pov: string | null;
+  last_checked_pov: string | null;
 }
 
 export interface HealthStatus {

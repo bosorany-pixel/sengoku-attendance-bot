@@ -38,9 +38,21 @@ export function MemberDetailPage() {
     setSearchParams(next);
   };
 
+  const formatPovDate = (iso: string | null | undefined) => {
+    if (!iso) return '—';
+    try {
+      const d = new Date(iso);
+      return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    } catch {
+      return '—';
+    }
+  };
+  const povLine = user
+    ? `Повки ${user.pov_count ?? 0} / проверено ${user.checked_pov_count ?? 0} · последний POV: ${formatPovDate(user.last_pov)} · последний проверенный: ${formatPovDate(user.last_checked_pov)}`
+    : '';
   const subtitle =
     validTab === 'bp'
-      ? `Батлпас · ${displayName}`
+      ? (povLine ? `Батлпас · ${displayName} · ${povLine}` : `Батлпас · ${displayName}`)
       : validTab === 'events'
         ? events ? `Сходил на ${events.length} контентов` : 'Загрузка...'
         : payments ? `${payments.length} выплат` : 'Загрузка...';

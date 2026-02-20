@@ -17,6 +17,24 @@ DB_PATH = os.environ.get("DB_PATH", os.path.join(SQL_PATH, 'sengoku_bot.db'))
 ARCHIVE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'src', 'archives')
 
 
+def _ensure_pov_columns(conn: sqlite3.Connection) -> None:
+    """Add pov_count, checked_pov_count, last_pov, last_checked_pov to USERS if missing (migration)."""
+    cursor = conn.execute("PRAGMA table_info(USERS)")
+    columns = [row[1] for row in cursor.fetchall()]
+    if "pov_count" not in columns:
+        conn.execute("ALTER TABLE USERS ADD COLUMN pov_count INTEGER DEFAULT 0")
+        conn.commit()
+    if "checked_pov_count" not in columns:
+        conn.execute("ALTER TABLE USERS ADD COLUMN checked_pov_count INTEGER DEFAULT 0")
+        conn.commit()
+    if "last_pov" not in columns:
+        conn.execute("ALTER TABLE USERS ADD COLUMN last_pov TEXT")
+        conn.commit()
+    if "last_checked_pov" not in columns:
+        conn.execute("ALTER TABLE USERS ADD COLUMN last_checked_pov TEXT")
+        conn.commit()
+
+
 @contextmanager
 def get_db_connection(db_path: Optional[str] = None):
     """Context manager for database connections."""
@@ -24,6 +42,7 @@ def get_db_connection(db_path: Optional[str] = None):
     conn = sqlite3.connect(path)
     conn.row_factory = sqlite3.Row
     try:
+        _ensure_pov_columns(conn)
         yield conn
     finally:
         conn.close()
@@ -77,7 +96,11 @@ def get_members(db_path: Optional[str] = None) -> List[Dict[str, Any]]:
         u.uid,
         COALESCE(NULLIF(u.server_username, ''), u.global_username) AS display_name,
         COALESCE(ev.event_count, 0) AS event_count,
-        COALESCE(pay.total_amount, 0) AS total_amount
+        COALESCE(pay.total_amount, 0) AS total_amount,
+        COALESCE(u.pov_count, 0) AS pov_count,
+        COALESCE(u.checked_pov_count, 0) AS checked_pov_count,
+        u.last_pov,
+        u.last_checked_pov
     FROM USERS u
 
     LEFT JOIN (
@@ -110,7 +133,10 @@ def get_members(db_path: Optional[str] = None) -> List[Dict[str, Any]]:
 
 def get_user(uid: str, db_path: Optional[str] = None) -> Optional[Dict[str, Any]]:
     """Get user details by UID (accepts string to handle large Discord UIDs)."""
-    query = "SELECT uid, COALESCE(NULLIF(global_username, ''), server_username) AS display_name FROM USERS WHERE uid=?"
+    query = """SELECT uid, COALESCE(NULLIF(global_username, ''), server_username) AS display_name,
+                COALESCE(pov_count, 0) AS pov_count, COALESCE(checked_pov_count, 0) AS checked_pov_count,
+                last_pov, last_checked_pov
+                FROM USERS WHERE uid=?"""
     
     with get_db_connection(db_path) as conn:
         cursor = conn.execute(query, (int(uid),))  # Convert to int for DB query

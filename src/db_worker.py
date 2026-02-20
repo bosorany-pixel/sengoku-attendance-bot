@@ -112,6 +112,24 @@ CREATE TABLE IF NOT EXISTS PAYMENTS_TO_USERS (
     FOREIGN KEY (message_id) REFERENCES PAYMENTS(message_id)
 )
 ''')
+        self._ensure_pov_columns()
+
+    def _ensure_pov_columns(self):
+        """Add pov_count, checked_pov_count, last_pov, last_checked_pov to USERS if missing (migration)."""
+        self.cursor.execute("PRAGMA table_info(USERS)")
+        columns = [row[1] for row in self.cursor.fetchall()]
+        if "pov_count" not in columns:
+            self.cursor.execute("ALTER TABLE USERS ADD COLUMN pov_count INTEGER DEFAULT 0")
+            self.conn.commit()
+        if "checked_pov_count" not in columns:
+            self.cursor.execute("ALTER TABLE USERS ADD COLUMN checked_pov_count INTEGER DEFAULT 0")
+            self.conn.commit()
+        if "last_pov" not in columns:
+            self.cursor.execute("ALTER TABLE USERS ADD COLUMN last_pov TEXT")
+            self.conn.commit()
+        if "last_checked_pov" not in columns:
+            self.cursor.execute("ALTER TABLE USERS ADD COLUMN last_checked_pov TEXT")
+            self.conn.commit()
 
     def execute(self, query: str, params: tuple = (), commit: bool = False):
         self.cursor.execute(query, params)
@@ -154,6 +172,18 @@ CREATE TABLE IF NOT EXISTS PAYMENTS_TO_USERS (
         return df
 
     def add_user(self, user: datatypes.User):
+        row = self.fetchone(
+            "SELECT pov_count, checked_pov_count, last_pov, last_checked_pov FROM USERS WHERE uid = ?",
+            (user.uuid,),
+        )
+        pov_count = checked_pov_count = 0
+        last_pov = last_checked_pov = None
+        if row is not None and len(row) >= 2:
+            pov_count = row[0] if row[0] is not None else 0
+            checked_pov_count = row[1] if row[1] is not None else 0
+            if len(row) >= 4:
+                last_pov = row[2]
+                last_checked_pov = row[3]
         self.execute('''
 INSERT OR REPLACE INTO USERS (
                      uid,
@@ -165,9 +195,13 @@ INSERT OR REPLACE INTO USERS (
                      need_to_get,
                      is_member,
                      join_date,
-                     roles
+                     roles,
+                     pov_count,
+                     checked_pov_count,
+                     last_pov,
+                     last_checked_pov
                     )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ''', (
         user.uuid,
         user.server_username,
@@ -178,8 +212,60 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         user.need_to_get,
         user.is_member,
         user.join_date.isoformat() if user.join_date else None,
-        user.roles
+        user.roles,
+        pov_count,
+        checked_pov_count,
+        last_pov,
+        last_checked_pov,
     ))
+
+    def update_pov_counts(
+        self,
+        uid: int,
+        pov_count: int,
+        checked_pov_count: int,
+        last_pov: str | None = None,
+        last_checked_pov: str | None = None,
+    ) -> None:
+        """Set pov_count, checked_pov_count, last_pov, last_checked_pov for a user (used by POV collector)."""
+        self.execute(
+            """UPDATE USERS SET pov_count = ?, checked_pov_count = ?,
+               last_pov = CASE WHEN ? IS NOT NULL AND (last_pov IS NULL OR ? > last_pov) THEN ? ELSE last_pov END,
+               last_checked_pov = CASE WHEN ? IS NOT NULL AND (last_checked_pov IS NULL OR ? > last_checked_pov) THEN ? ELSE last_checked_pov END
+               WHERE uid = ?""",
+            (
+                pov_count,
+                checked_pov_count,
+                last_pov,
+                last_pov,
+                last_pov,
+                last_checked_pov,
+                last_checked_pov,
+                last_checked_pov,
+                uid,
+            ),
+        )
+
+    def ensure_user_for_pov(self, uid: int, display_name: str) -> None:
+        """Ensure USERS has a row for this uid (for POV collector); preserve existing pov counts."""
+        row = self.fetchone("SELECT uid FROM USERS WHERE uid = ?", (uid,))
+        if row is not None:
+            return
+        self.cursor.execute("PRAGMA table_info(USERS)")
+        columns = [r[1] for r in self.cursor.fetchall()]
+        has_last = "last_pov" in columns
+        if has_last:
+            self.execute(
+                """INSERT INTO USERS (uid, server_username, global_username, liable, visible, timeout, need_to_get, is_member, join_date, roles, pov_count, checked_pov_count, last_pov, last_checked_pov)
+                   VALUES (?, ?, '', 0, 0, NULL, 45, 1, NULL, NULL, 0, 0, NULL, NULL)""",
+                (uid, display_name or str(uid)),
+            )
+        else:
+            self.execute(
+                """INSERT INTO USERS (uid, server_username, global_username, liable, visible, timeout, need_to_get, is_member, join_date, roles, pov_count, checked_pov_count)
+                   VALUES (?, ?, '', 0, 0, NULL, 45, 1, NULL, NULL, 0, 0)""",
+                (uid, display_name or str(uid)),
+            )
         
     def add_branch_message(self, branch_message: datatypes.BranchMessage, parent_message_id: int):
         self.execute('''

@@ -9,7 +9,11 @@ class MemberResponse(BaseModel):
     display_name: str
     event_count: int
     total_amount: float
-    
+    pov_count: int = 0
+    checked_pov_count: int = 0
+    last_pov: Optional[str] = None
+    last_checked_pov: Optional[str] = None
+
     @field_serializer('uid')
     def serialize_uid(self, uid: int) -> str:
         """Serialize UID as string to preserve precision in JavaScript."""
@@ -60,6 +64,10 @@ class UserDetailResponse(BaseModel):
     """Response model for user details."""
     uid: int  # Stored as int in DB, serialized as str in JSON
     display_name: str
+    pov_count: int = 0
+    checked_pov_count: int = 0
+    last_pov: Optional[str] = None
+    last_checked_pov: Optional[str] = None
     
     @field_serializer('uid')
     def serialize_uid(self, uid: int) -> str:
