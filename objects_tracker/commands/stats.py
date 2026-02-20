@@ -29,8 +29,7 @@ async def pov_stats(interaction: discord.Interaction):
         zero_pov = db_worker.fetchall(
             f"""SELECT uid, server_username
                 FROM USERS
-                WHERE COALESCE(pov_count, 0) = 0 
-                and is_member = 1 and roles like '%Half Orc%'
+                WHERE COALESCE(pov_count, 0) = 0 and server_username is not null and server_username!=''
                 ORDER BY server_username""",
             (),
         )
@@ -38,25 +37,22 @@ async def pov_stats(interaction: discord.Interaction):
         week_ago = db_worker.fetchall(
             f"""SELECT uid, server_username, last_pov
                 FROM USERS
-                WHERE last_pov IS NOT NULL AND last_pov < datetime('now', '-7 days') 
-                and is_member = 1 and roles like '%Half Orc%'
+                WHERE last_pov IS NOT NULL AND last_pov < datetime('now', '-7 days') AND server_username is not null and server_username!=''
                 ORDER BY last_pov ASC""",
             (),
         )
+        # Users with last_checked_pov older than 7 days (have at least one checked POV)
         week_ago_checked = db_worker.fetchall(
             f"""SELECT uid, server_username, last_checked_pov
                 FROM USERS
-                WHERE 
-                last_pov IS NOT NULL AND last_pov > datetime('now', '-7 days') 
-                AND last_checked_pov IS NOT NULL AND last_checked_pov < datetime('now', '-7 days') 
-                and is_member = 1 and roles like '%Half Orc%'
-                ORDER BY last_pov ASC""",
+                WHERE last_checked_pov IS NOT NULL AND last_checked_pov < datetime('now', '-7 days') AND server_username is not null and server_username!=''
+                ORDER BY last_checked_pov ASC""",
             (),
         )
         name = lambda r: (r[1] or str(r[0]) or "—").strip() or f"uid:{r[0]}"
-        zero_list = "\n".join(name(r) for r in zero_pov) if zero_pov else "—"
-        week_list = "\n".join(name(r) for r in week_ago) if week_ago else "—"
-        week_checked_list = "\n".join(name(r) for r in week_ago) if week_ago_checked else "—"
+        zero_list = ", ".join(name(r) for r in zero_pov) if zero_pov else "—"
+        week_list = ", ".join(name(r) for r in week_ago) if week_ago else "—"
+        week_checked_list = ", ".join(name(r) for r in week_ago_checked) if week_ago_checked else "—"
         # Discord embed field value limit 1024
         def truncate(s: str, max_len: int = 1020) -> str:
             if len(s) <= max_len:
@@ -77,9 +73,9 @@ async def pov_stats(interaction: discord.Interaction):
             inline=False,
         )
         embed.add_field(
-            name=f"Давно не разбирали - {len(week_checked_list)} чел.",
+            name=f"Последний проверенный POV старше недели — {len(week_ago_checked)} чел.",
             value=truncate(week_checked_list),
-            inline=False
+            inline=False,
         )
         await interaction.followup.send(embed=embed)
     except Exception as e:
