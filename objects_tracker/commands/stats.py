@@ -41,9 +41,20 @@ async def pov_stats(interaction: discord.Interaction):
                 ORDER BY last_pov ASC""",
             (),
         )
+        week_ago_checked = db_worker.fetchall(
+            f"""SELECT uid, server_username, last_checked_pov
+                FROM USERS
+                WHERE 
+                last_pov IS NOT NULL AND last_pov > datetime('now', '-7 days') 
+                AND last_checked_pov IS NOT NULL AND last_checked_pov > datetime('now', '-7 days') 
+                AND server_username is not null and server_username!='' and roles like '%Half Orc%'
+                ORDER BY last_pov ASC""",
+            (),
+        )
         name = lambda r: (r[1] or str(r[0]) or "—").strip() or f"uid:{r[0]}"
         zero_list = "\n".join(name(r) for r in zero_pov) if zero_pov else "—"
         week_list = "\n".join(name(r) for r in week_ago) if week_ago else "—"
+        week_checked_list = "\n".join(name(r) for r in week_ago) if week_ago_checked else "—"
         # Discord embed field value limit 1024
         def truncate(s: str, max_len: int = 1020) -> str:
             if len(s) <= max_len:
@@ -62,6 +73,11 @@ async def pov_stats(interaction: discord.Interaction):
             name=f"Последний POV старше недели — {len(week_ago)} чел.",
             value=truncate(week_list),
             inline=False,
+        )
+        embed.add_field(
+            name=f"Давно не разбирали - {len(week_checked_list)} чел.",
+            value=truncate(week_checked_list),
+            inline=False
         )
         await interaction.followup.send(embed=embed)
     except Exception as e:
