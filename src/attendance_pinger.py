@@ -46,7 +46,7 @@ def low_attendance_players(data: dict) -> list[dict]:
     max_att = max(p.get("attendance", 0) for p in players)
     if max_att <= 0:
         return []
-    threshold = max_att / 2.0
+    threshold = max_att / 3.0
     return [p for p in players if p.get("attendance", 0) < threshold]
 
 
