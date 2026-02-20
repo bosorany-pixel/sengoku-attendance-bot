@@ -77,7 +77,7 @@ async def pov_stats(interaction: discord.Interaction):
             inline=False,
         )
         embed.add_field(
-            name=f"Давно не разбирали - {len(week_checked_list)} чел.",
+            name=f"Давно не разбирали — {len(week_ago_checked)} чел.",
             value=truncate(week_checked_list),
             inline=False
         )
