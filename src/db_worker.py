@@ -8,14 +8,14 @@ sql_path = "/mnt/db"
 if os.path.exists("/db"):
     sql_path = "/db"
 elif not os.path.exists("/mnt/db"):
-    raise "I need a db path"
+    sql_path = os.path.dirname(os.path.abspath(__file__))
 
 
 class DBWorker:
-    def __init__(self, db_path: str = os.path.join(
-            sql_path,
-            'sengoku_bot.db'
-        )):
+    def __init__(self, db_path: str | None = None):
+        if db_path is None:
+            db_path = os.environ.get("DB_PATH") or os.path.join(sql_path, "sengoku_bot.db")
+        self._db_path = db_path
         print(f"connected to db on {db_path}")
         self.conn = sqlite3.connect(db_path)
         self.conn.execute("PRAGMA foreign_keys = ON")
@@ -132,8 +132,16 @@ CREATE TABLE IF NOT EXISTS PAYMENTS_TO_USERS (
             self.conn.commit()
 
     def execute(self, query: str, params: tuple = (), commit: bool = False):
-        self.cursor.execute(query, params)
-        self.conn.commit()
+        try:
+            self.cursor.execute(query, params)
+            self.conn.commit()
+        except sqlite3.OperationalError as e:
+            if "readonly" in str(e).lower() or "attempt to write" in str(e).lower():
+                raise sqlite3.OperationalError(
+                    f"Database is read-only (path: {self._db_path}). "
+                    "Check write permissions or set DB_PATH to a writable path."
+                ) from e
+            raise
         return self.cursor
 
     def fetchall(self, query: str, params: tuple = ()):

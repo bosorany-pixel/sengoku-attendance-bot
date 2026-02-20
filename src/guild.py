@@ -58,7 +58,7 @@ async def get_nicks(guild_id: int, local_bot: discord.Client):
         updated += 1
 
     for uid in not_in_guild:
-        db_worker.execute("UPDATE USERS SET is_member = 0 WHERE uid = ?", (uid,))
+        db_worker.execute("UPDATE USERS SET is_member = 0, roles='' WHERE uid = ?", (uid,))
 
     print(f"Обновлено {updated} мемберов из {len(uids)} в БД (гильдия {guild.name}); не в гильдии: {len(not_in_guild)}")
 

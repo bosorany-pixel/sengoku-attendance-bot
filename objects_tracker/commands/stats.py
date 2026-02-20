@@ -29,7 +29,8 @@ async def pov_stats(interaction: discord.Interaction):
         zero_pov = db_worker.fetchall(
             f"""SELECT uid, server_username
                 FROM USERS
-                WHERE COALESCE(pov_count, 0) = 0 and server_username is not null and server_username!='' and roles like '%Half Orc%'
+                WHERE COALESCE(pov_count, 0) = 0 
+                and is_member = 1 and roles like '%Half Orc%'
                 ORDER BY server_username""",
             (),
         )
@@ -37,7 +38,8 @@ async def pov_stats(interaction: discord.Interaction):
         week_ago = db_worker.fetchall(
             f"""SELECT uid, server_username, last_pov
                 FROM USERS
-                WHERE last_pov IS NOT NULL AND last_pov < datetime('now', '-7 days') AND server_username is not null and server_username!='' and roles like '%Half Orc%'
+                WHERE last_pov IS NOT NULL AND last_pov < datetime('now', '-7 days') 
+                and is_member = 1 and roles like '%Half Orc%'
                 ORDER BY last_pov ASC""",
             (),
         )
@@ -47,7 +49,7 @@ async def pov_stats(interaction: discord.Interaction):
                 WHERE 
                 last_pov IS NOT NULL AND last_pov > datetime('now', '-7 days') 
                 AND last_checked_pov IS NOT NULL AND last_checked_pov > datetime('now', '-7 days') 
-                AND server_username is not null and server_username!='' and roles like '%Half Orc%'
+                and is_member = 1 and roles like '%Half Orc%'
                 ORDER BY last_pov ASC""",
             (),
         )
