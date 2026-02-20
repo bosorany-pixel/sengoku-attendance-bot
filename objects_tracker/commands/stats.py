@@ -48,7 +48,7 @@ async def pov_stats(interaction: discord.Interaction):
                 FROM USERS
                 WHERE 
                 last_pov IS NOT NULL AND last_pov > datetime('now', '-7 days') 
-                AND last_checked_pov IS NOT NULL AND last_checked_pov > datetime('now', '-7 days') 
+                AND last_checked_pov IS NOT NULL AND last_checked_pov < datetime('now', '-7 days') 
                 and is_member = 1 and roles like '%Half Orc%'
                 ORDER BY last_pov ASC""",
             (),
