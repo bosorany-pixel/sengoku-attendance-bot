@@ -251,6 +251,22 @@ async def get_member_achievements(uid: str):
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 
+@app.get("/stats/mordor")
+async def stats_mordor():
+    """
+    Mordor guild attendance stats from Albion BB (europe.albionbb.com).
+    Fetches and parses the attendance page; returns same data as the website in JSON.
+    """
+    try:
+        from albionbb_parser import get_mordor_stats
+        return get_mordor_stats()
+    except ImportError:
+        from api.albionbb_parser import get_mordor_stats
+        return get_mordor_stats()
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Failed to fetch Albion BB stats: {str(e)}")
+
+
 @app.get("/")
 async def root():
     """Root endpoint with API information."""
