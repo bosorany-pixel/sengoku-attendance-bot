@@ -23,7 +23,7 @@ async def pov_stats(interaction: discord.Interaction):
             "У вас нет прав для просмотра этой статистики.", ephemeral=True
         )
         return
-    await interaction.response.defer(ephemeral=True)
+    await interaction.response.defer()
     try:
         # Users with 0 pov_count (or NULL)
         zero_pov = db_worker.fetchall(
@@ -65,6 +65,4 @@ async def pov_stats(interaction: discord.Interaction):
         )
         await interaction.followup.send(embed=embed)
     except Exception as e:
-        await interaction.followup.send(
-            f"Ошибка: {e}", ephemeral=True
-        )
+        await interaction.followup.send(f"Ошибка: {e}")
