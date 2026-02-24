@@ -228,10 +228,10 @@ def parse_stats(html: str) -> dict[str, Any]:
             "kills": int(_parse_short_number(kills)),
             "deaths": int(_parse_short_number(deaths)),
             "avg_ip": int(_parse_short_number(avg_ip)),
-            "damage": _parse_short_number(dmg),
-            "heal": _parse_short_number(heal),
-            "kill_fame": _parse_short_number(k_fame),
-            "death_fame": _parse_short_number(d_fame),
+            "damage": int(_parse_short_number(dmg)),
+            "heal": int(_parse_short_number(heal)),
+            "kill_fame": int(_parse_short_number(k_fame)),
+            "death_fame": int(_parse_short_number(d_fame)),
         })
 
     return _build_response(guild_name, summary, players)
