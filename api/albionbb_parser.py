@@ -59,25 +59,44 @@ def _extract_nuxt_payload(html: str) -> list[Any] | None:
 
 
 def _resolve_ref(payload: list[Any], idx: int, visited: set[int] | None = None) -> Any:
-    """Resolve a Nuxt payload value; integers are refs into payload (one level only)."""
+    """Resolve a Nuxt payload slot.
+
+    Nuxt's `__NUXT_DATA__` payload is an array. Dict/list values often contain
+    integers that reference another slot.
+
+    Critical nuance for AlbionBB:
+    Metric slots resolve to primitive ints (e.g. attendance=29). Those primitive
+    ints are **real values**, not another reference.
+
+    So we resolve exactly one hop (idx -> payload[idx]) and recursively resolve
+    dict/list contents. If a slot contains an int, treat it as a literal.
+    """
     if visited is None:
         visited = set()
     if idx in visited or idx < 0 or idx >= len(payload):
         return payload[idx] if 0 <= idx < len(payload) else None
     v = payload[idx]
     if isinstance(v, int):
-        # At index idx the slot holds v. If v is another ref (dict/list at payload[v]), follow it.
-        if 0 <= v < len(payload) and isinstance(payload[v], (dict, list)):
-            visited.add(idx)
-            return _resolve_ref(payload, v, visited)
-        # Otherwise v is the literal value (number or ref to primitive)
+        # Treat primitive ints as literal values.
+        # Do NOT attempt int->slot chaining: it will misread real numbers like 29
+        # as "payload[29]".
         return v
     if isinstance(v, dict):
         visited.add(idx)
-        return {k: _resolve_ref(payload, x, visited) if isinstance(x, int) and 0 <= x < len(payload) else x for k, x in v.items()}
+        return {
+            k: _resolve_ref(payload, x, visited)
+            if isinstance(x, int) and 0 <= x < len(payload)
+            else x
+            for k, x in v.items()
+        }
     if isinstance(v, list):
         visited.add(idx)
-        return [_resolve_ref(payload, x, visited) if isinstance(x, int) and 0 <= x < len(payload) else x for x in v]
+        return [
+            _resolve_ref(payload, x, visited)
+            if isinstance(x, int) and 0 <= x < len(payload)
+            else x
+            for x in v
+        ]
     return v
 
 
@@ -89,12 +108,25 @@ def _parse_players_from_nuxt(html: str) -> list[dict[str, Any]] | None:
     payload = _extract_nuxt_payload(html)
     if not payload or not isinstance(payload, list):
         return None
-    # Find the list of player indices: list of ints, length > 25, first element small (e.g. 8)
+    # Find the list of player indices.
+    # Nuxt contains many lists of ints; we score candidates by checking whether
+    # their elements point to dicts that look like player rows.
     player_indices: list[int] | None = None
-    for i, item in enumerate(payload):
-        if isinstance(item, list) and len(item) > 25 and all(isinstance(x, int) for x in item):
+    best_score = -1
+    for item in payload:
+        if not (isinstance(item, list) and len(item) > 25 and all(isinstance(x, int) for x in item)):
+            continue
+        sample = item[: min(40, len(item))]
+        score = 0
+        for idx in sample:
+            if not (0 <= idx < len(payload) and isinstance(payload[idx], dict)):
+                continue
+            d = payload[idx]
+            if "name" in d and ("attendance" in d or "kills" in d or "avgIp" in d):
+                score += 1
+        if score > best_score:
+            best_score = score
             player_indices = item
-            break
     if not player_indices:
         return None
     players: list[dict[str, Any]] = []
