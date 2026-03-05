@@ -28,4 +28,140 @@
   .input-search {
     @apply bg-dark-card text-dark-text border border-dark-border rounded px-3 py-2 focus:outline-none focus:border-accent-blue;
   }
+
+  /* BP achieved dot: soft glow */
+  .bp-dot-glow {
+    box-shadow: 0 0 8px 2px rgba(255, 255, 255, 0.5),
+                0 0 16px 4px rgba(255, 255, 255, 0.2);
+  }
+
+  /* Achieved: 6 particles glow constantly (no animation) */
+  .bp-particle-steady {
+    opacity: 0.75;
+    box-shadow: 0 0 4px 1px rgba(255, 255, 255, 0.6);
+  }
+
+  /* Next level: pulsing particles */
+  @keyframes bp-particle-float {
+    0%, 100% {
+      opacity: 0.25;
+      transform: scale(0.8);
+    }
+    50% {
+      opacity: 0.9;
+      transform: scale(1.4);
+    }
+  }
+
+  .bp-particle-pulse {
+    animation: bp-particle-float 2.2s ease-in-out infinite;
+  }
+
+  .bp-particle-pulse:nth-child(1) { animation-delay: 0s; }
+  .bp-particle-pulse:nth-child(2) { animation-delay: 0.2s; }
+  .bp-particle-pulse:nth-child(3) { animation-delay: 0.4s; }
+  .bp-particle-pulse:nth-child(4) { animation-delay: 0.6s; }
+  .bp-particle-pulse:nth-child(5) { animation-delay: 0.8s; }
+  .bp-particle-pulse:nth-child(6) { animation-delay: 1s; }
+
+  /* Next level dot: subtle pulse on ring/glow */
+  @keyframes bp-dot-next-pulse {
+    0%, 100% {
+      box-shadow: 0 0 6px 1px rgba(255, 255, 255, 0.35);
+    }
+    50% {
+      box-shadow: 0 0 12px 3px rgba(255, 255, 255, 0.6);
+    }
+  }
+
+  .bp-dot-next-pulse {
+    animation: bp-dot-next-pulse 2s ease-in-out infinite;
+  }
+
+  /* Timeline line segments: subtle soft edge */
+  .bp-line-segment {
+    filter: blur(0.35px);
+  }
+
+  /* Fire sparks: rise from bottom to center and fade */
+  @keyframes spark-rise {
+    0% {
+      transform: translateY(0) scale(1);
+      opacity: var(--spark-opacity, 0.7);
+    }
+    100% {
+      transform: translateY(-50vh) scale(0.3);
+      opacity: 0;
+    }
+  }
+
+  .spark {
+    position: absolute;
+    bottom: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle, #fbbf24 0%, #f97316 40%, #dc2626 100%);
+    box-shadow: 0 0 6px 2px rgba(251, 191, 36, 0.4);
+    animation: spark-rise ease-out infinite;
+    will-change: transform, opacity;
+  }
+
+  /* Welcome page: rune shimmer divider */
+  @keyframes shimmer {
+    from { transform: translateX(-30%); }
+    to { transform: translateX(30%); }
+  }
+
+  /* Welcome page: floating runes */
+  @keyframes floatRune {
+    0% { transform: translate3d(0,0,0) rotate(0deg); opacity: 0.25; }
+    50% { transform: translate3d(0,-18px,0) rotate(8deg); opacity: 0.55; }
+    100% { transform: translate3d(0,0,0) rotate(0deg); opacity: 0.25; }
+  }
+
+  /* Welcome page: contact CTA pulse glow */
+  @keyframes pulseGlow {
+    0% { transform: scale(0.98); opacity: 0.25; }
+    50% { transform: scale(1.04); opacity: 0.55; }
+    100% { transform: scale(0.98); opacity: 0.25; }
+  }
+
+  /* Welcome page: gnomish rune title glow */
+  .rune-title {
+    text-shadow: 0 0 20px rgba(255, 210, 120, 0.12),
+                 0 0 40px rgba(255, 180, 80, 0.06);
+  }
+
+  /* Welcome page: gold wash on open — 80% → 100% → 0% in 1.5s */
+  @keyframes welcomeGoldWash {
+    0% {
+      opacity: 0.8;
+    }
+    20% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+  @keyframes welcomeLineGlow {
+    0% {
+      text-shadow: 0 0 20px rgba(255, 215, 128, 0.7),
+                   0 0 40px rgba(255, 210, 120, 0.35);
+    }
+    20% {
+      text-shadow: 0 0 24px rgba(255, 215, 128, 0.85),
+                   0 0 48px rgba(255, 210, 120, 0.45);
+    }
+    100% {
+      text-shadow: 0 0 8px rgba(255, 215, 128, 0.15),
+                   0 0 16px rgba(255, 180, 80, 0.08);
+    }
+  }
+  .welcome-glow-on-load .welcome-glow-overlay {
+    animation: welcomeGoldWash 1.5s ease-out forwards;
+  }
+  .welcome-glow-on-load .welcome-text-glow,
+  .welcome-glow-on-load .welcome-text-glow * {
+    animation: welcomeLineGlow 1.5s ease-out forwards;
+  }
 }

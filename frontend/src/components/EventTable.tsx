@@ -7,7 +7,7 @@ interface EventTableProps {
 
 export function EventTable({ events }: EventTableProps) {
   const getDiscordLink = (event: Event) => {
-    if (event.channel_id === 0) return null;
+    if (event.channel_id === '0') return null;
     return `https://discord.com/channels/${event.guild_id}/${event.channel_id}/${event.message_id}`;
   };
 

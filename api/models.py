@@ -1,6 +1,6 @@
 """Pydantic models for API responses."""
 from typing import Optional, List
-from pydantic import BaseModel, Field, field_serializer
+from pydantic import BaseModel, field_serializer
 
 
 class MemberResponse(BaseModel):
@@ -9,7 +9,11 @@ class MemberResponse(BaseModel):
     display_name: str
     event_count: int
     total_amount: float
-    
+    pov_count: int = 0
+    checked_pov_count: int = 0
+    last_pov: Optional[str] = None
+    last_checked_pov: Optional[str] = None
+
     @field_serializer('uid')
     def serialize_uid(self, uid: int) -> str:
         """Serialize UID as string to preserve precision in JavaScript."""
@@ -28,6 +32,11 @@ class EventResponse(BaseModel):
     points: Optional[int]
     hidden: int
 
+    @field_serializer("message_id", "guild_id", "channel_id")
+    def serialize_snowflake(self, value: int) -> str:
+        """Serialize Discord snowflake IDs as strings to avoid JS number precision loss."""
+        return str(value)
+
 
 class PaymentResponse(BaseModel):
     """Response model for a payment."""
@@ -38,6 +47,11 @@ class PaymentResponse(BaseModel):
     payment_ammount: float
     user_amount: int
     pay_time: Optional[str]
+
+    @field_serializer("message_id", "guild_id", "channel_id")
+    def serialize_snowflake(self, value: int) -> str:
+        """Serialize Discord snowflake IDs as strings to avoid JS number precision loss."""
+        return str(value)
 
 
 class ArchiveResponse(BaseModel):
@@ -50,6 +64,10 @@ class UserDetailResponse(BaseModel):
     """Response model for user details."""
     uid: int  # Stored as int in DB, serialized as str in JSON
     display_name: str
+    pov_count: int = 0
+    checked_pov_count: int = 0
+    last_pov: Optional[str] = None
+    last_checked_pov: Optional[str] = None
     
     @field_serializer('uid')
     def serialize_uid(self, uid: int) -> str:
@@ -86,3 +104,30 @@ class HealthResponse(BaseModel):
     """Response for health check endpoint."""
     status: str
     technical_timeout: bool
+
+
+class LevelResponse(BaseModel):
+    """Response model for a BP level (attendance threshold)."""
+    level: int
+    attendance: int
+
+
+class AchievementResponse(BaseModel):
+    """Response model for an achievement."""
+    id: int
+    bp_level: int
+    description: str
+    picture: str
+
+
+class LevelsAndAchievementsResponse(BaseModel):
+    """Response for levels and achievements list endpoint (no user data)."""
+    levels: List[LevelResponse]
+    achievements: List[AchievementResponse]
+
+
+class UserAchievementsResponse(BaseModel):
+    """Response for user achievements endpoint."""
+    user: UserDetailResponse
+    achievements: List[AchievementResponse]
+    total_count: int

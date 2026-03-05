@@ -6,7 +6,10 @@ import type {
   HealthStatus,
   UserEventsResponse,
   UserPaymentsResponse,
-  ArchivesListResponse
+  ArchivesListResponse,
+  LevelsAndAchievementsResponse,
+  UserAchievementsResponse,
+  MordorStatsResponse,
 } from './types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
@@ -53,5 +56,18 @@ export const api = {
 
   getHealth: (): Promise<HealthStatus> => {
     return fetchAPI<HealthStatus>('/health');
+  },
+
+  getLevelsAndAchievements: (): Promise<LevelsAndAchievementsResponse> => {
+    return fetchAPI<LevelsAndAchievementsResponse>('/levels');
+  },
+
+  getUserAchievements: async (uid: string): Promise<UserAchievementsResponse> => {
+    return fetchAPI<UserAchievementsResponse>(`/members/${uid}/achievements`);
+  },
+
+  /** Mordor guild stats from Albion BB (summary + players). */
+  getMordorStats: (): Promise<MordorStatsResponse> => {
+    return fetchAPI<MordorStatsResponse>('/stats/mordor');
   },
 };

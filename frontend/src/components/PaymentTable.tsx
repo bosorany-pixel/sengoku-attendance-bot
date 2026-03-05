@@ -7,15 +7,12 @@ interface PaymentTableProps {
 
 function formatMoney(value: number): string {
   if (value === null || value === undefined) return '—';
-  return value.toLocaleString('ru-RU', { 
-    minimumFractionDigits: 2, 
-    maximumFractionDigits: 2 
-  }).replace(/,/g, ' ');
+  return Math.round(value).toLocaleString('ru-RU').replace(/,/g, ' ');
 }
 
 export function PaymentTable({ payments }: PaymentTableProps) {
   const getDiscordLink = (payment: Payment) => {
-    if (payment.channel_id === 0) return null;
+    if (payment.channel_id === '0') return null;
     return `https://discord.com/channels/${payment.guild_id}/${payment.channel_id}/${payment.message_id}`;
   };
 
@@ -53,8 +50,8 @@ export function PaymentTable({ payments }: PaymentTableProps) {
                 <td className="border border-[#555] p-2.5">
                   {formatMoney(payment.payment_ammount)}
                 </td>
-                <td className="border border-[#555] p-2.5 text-center">
-                  {payment.user_amount}
+                <td className="border border-[#555] p-2.5 text-center tabular-nums">
+                  {Math.round(payment.user_amount)}
                 </td>
                 <td className="border border-[#555] p-2.5">
                   {payment.pay_time ? new Date(payment.pay_time).toLocaleDateString('ru-RU') : '—'}

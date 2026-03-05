@@ -18,6 +18,8 @@ data = {"mimeType": "jpg",
 
 url = "https://ocr.api.cloud.yandex.net/ocr/v1/recognizeText"
 
+print(pop)
+
 headers= {"Content-Type": "application/png",
           "Authorization": "Api-Key {:s}".format(os.getenv("YANDEX_API_KEY")),
           "x-folder-id": "b1g9o81kme3o99o6bh0f",

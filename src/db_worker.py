@@ -8,14 +8,14 @@ sql_path = "/mnt/db"
 if os.path.exists("/db"):
     sql_path = "/db"
 elif not os.path.exists("/mnt/db"):
-    raise "I need a db path"
+    sql_path = os.path.dirname(os.path.abspath(__file__))
 
 
 class DBWorker:
-    def __init__(self, db_path: str = os.path.join(
-            sql_path,
-            'sengoku_bot.db'
-        )):
+    def __init__(self, db_path: str | None = None):
+        if db_path is None:
+            db_path = os.environ.get("DB_PATH") or os.path.join(sql_path, "sengoku_bot.db")
+        self._db_path = db_path
         print(f"connected to db on {db_path}")
         self.conn = sqlite3.connect(db_path)
         self.conn.execute("PRAGMA foreign_keys = ON")
@@ -79,6 +79,31 @@ CREATE TABLE IF NOT EXISTS PAYMENTS (
 )
 ''')
         self.cursor.execute('''
+CREATE TABLE IF NOT EXISTS ACHIVEMENTS (
+    id INTEGER PRIMARY KEY,
+    bp_level INTEGER,
+    description TEXT,
+    picture TEXT DEFAULT ''
+)
+''')
+        self.cursor.execute('''
+CREATE TABLE IF NOT EXISTS BP_LEVELS (
+    attendence INTEGER,
+    level INTEGER
+)
+''')
+        self.cursor.execute('''
+CREATE TABLE IF NOT EXISTS ACHIVEMENTS_TO_USERS (
+    ds_uid INTEGER,
+    achivement_id INTEGER,
+    created DATETIME,
+    taken INTEGER default 1,
+    PRIMARY KEY (ds_uid, achivement_id),
+    FOREIGN KEY (ds_uid) REFERENCES USERS(uid),
+    FOREIGN KEY (achivement_id) REFERENCES ACHIVEMENTS(id)
+);
+        ''')
+        self.cursor.execute('''
 CREATE TABLE IF NOT EXISTS PAYMENTS_TO_USERS (
     ds_uid INTEGER,
     message_id INTEGER,
@@ -87,10 +112,36 @@ CREATE TABLE IF NOT EXISTS PAYMENTS_TO_USERS (
     FOREIGN KEY (message_id) REFERENCES PAYMENTS(message_id)
 )
 ''')
+        self._ensure_pov_columns()
+
+    def _ensure_pov_columns(self):
+        """Add pov_count, checked_pov_count, last_pov, last_checked_pov to USERS if missing (migration)."""
+        self.cursor.execute("PRAGMA table_info(USERS)")
+        columns = [row[1] for row in self.cursor.fetchall()]
+        if "pov_count" not in columns:
+            self.cursor.execute("ALTER TABLE USERS ADD COLUMN pov_count INTEGER DEFAULT 0")
+            self.conn.commit()
+        if "checked_pov_count" not in columns:
+            self.cursor.execute("ALTER TABLE USERS ADD COLUMN checked_pov_count INTEGER DEFAULT 0")
+            self.conn.commit()
+        if "last_pov" not in columns:
+            self.cursor.execute("ALTER TABLE USERS ADD COLUMN last_pov TEXT")
+            self.conn.commit()
+        if "last_checked_pov" not in columns:
+            self.cursor.execute("ALTER TABLE USERS ADD COLUMN last_checked_pov TEXT")
+            self.conn.commit()
 
     def execute(self, query: str, params: tuple = (), commit: bool = False):
-        self.cursor.execute(query, params)
-        self.conn.commit()
+        try:
+            self.cursor.execute(query, params)
+            self.conn.commit()
+        except sqlite3.OperationalError as e:
+            if "readonly" in str(e).lower() or "attempt to write" in str(e).lower():
+                raise sqlite3.OperationalError(
+                    f"Database is read-only (path: {self._db_path}). "
+                    "Check write permissions or set DB_PATH to a writable path."
+                ) from e
+            raise
         return self.cursor
 
     def fetchall(self, query: str, params: tuple = ()):
@@ -129,6 +180,18 @@ CREATE TABLE IF NOT EXISTS PAYMENTS_TO_USERS (
         return df
 
     def add_user(self, user: datatypes.User):
+        row = self.fetchone(
+            "SELECT pov_count, checked_pov_count, last_pov, last_checked_pov FROM USERS WHERE uid = ?",
+            (user.uuid,),
+        )
+        pov_count = checked_pov_count = 0
+        last_pov = last_checked_pov = None
+        if row is not None and len(row) >= 2:
+            pov_count = row[0] if row[0] is not None else 0
+            checked_pov_count = row[1] if row[1] is not None else 0
+            if len(row) >= 4:
+                last_pov = row[2]
+                last_checked_pov = row[3]
         self.execute('''
 INSERT OR REPLACE INTO USERS (
                      uid,
@@ -140,9 +203,13 @@ INSERT OR REPLACE INTO USERS (
                      need_to_get,
                      is_member,
                      join_date,
-                     roles
+                     roles,
+                     pov_count,
+                     checked_pov_count,
+                     last_pov,
+                     last_checked_pov
                     )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ''', (
         user.uuid,
         user.server_username,
@@ -153,8 +220,60 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         user.need_to_get,
         user.is_member,
         user.join_date.isoformat() if user.join_date else None,
-        user.roles
+        user.roles,
+        pov_count,
+        checked_pov_count,
+        last_pov,
+        last_checked_pov,
     ))
+
+    def update_pov_counts(
+        self,
+        uid: int,
+        pov_count: int,
+        checked_pov_count: int,
+        last_pov: str | None = None,
+        last_checked_pov: str | None = None,
+    ) -> None:
+        """Set pov_count, checked_pov_count, last_pov, last_checked_pov for a user (used by POV collector)."""
+        self.execute(
+            """UPDATE USERS SET pov_count = ?, checked_pov_count = ?,
+               last_pov = CASE WHEN ? IS NOT NULL AND (last_pov IS NULL OR ? > last_pov) THEN ? ELSE last_pov END,
+               last_checked_pov = CASE WHEN ? IS NOT NULL AND (last_checked_pov IS NULL OR ? > last_checked_pov) THEN ? ELSE last_checked_pov END
+               WHERE uid = ?""",
+            (
+                pov_count,
+                checked_pov_count,
+                last_pov,
+                last_pov,
+                last_pov,
+                last_checked_pov,
+                last_checked_pov,
+                last_checked_pov,
+                uid,
+            ),
+        )
+
+    def ensure_user_for_pov(self, uid: int, display_name: str) -> None:
+        """Ensure USERS has a row for this uid (for POV collector); preserve existing pov counts."""
+        row = self.fetchone("SELECT uid FROM USERS WHERE uid = ?", (uid,))
+        if row is not None:
+            return
+        self.cursor.execute("PRAGMA table_info(USERS)")
+        columns = [r[1] for r in self.cursor.fetchall()]
+        has_last = "last_pov" in columns
+        if has_last:
+            self.execute(
+                """INSERT INTO USERS (uid, server_username, global_username, liable, visible, timeout, need_to_get, is_member, join_date, roles, pov_count, checked_pov_count, last_pov, last_checked_pov)
+                   VALUES (?, ?, '', 0, 0, NULL, 45, 1, NULL, NULL, 0, 0, NULL, NULL)""",
+                (uid, display_name or str(uid)),
+            )
+        else:
+            self.execute(
+                """INSERT INTO USERS (uid, server_username, global_username, liable, visible, timeout, need_to_get, is_member, join_date, roles, pov_count, checked_pov_count)
+                   VALUES (?, ?, '', 0, 0, NULL, 45, 1, NULL, NULL, 0, 0)""",
+                (uid, display_name or str(uid)),
+            )
         
     def add_branch_message(self, branch_message: datatypes.BranchMessage, parent_message_id: int):
         self.execute('''
@@ -307,7 +426,160 @@ VALUES (?, ?)
             """,
             (top_n,),
         )
-    
+
+    # --- BP_LEVELS and ACHIVEMENTS (modular, no changes to existing code) ---
+
+    def get_bp_levels(self) -> list[tuple]:
+        """Return list of (level, attendance) ordered by level."""
+        return self.fetchall(
+            "SELECT level, attendence FROM BP_LEVELS ORDER BY level ASC",
+            (),
+        )
+
+    def get_all_achievements(self) -> list[tuple]:
+        """Return list of (id, bp_level, description, picture)."""
+        return self.fetchall(
+            "SELECT id, bp_level, description, picture FROM ACHIVEMENTS ORDER BY bp_level ASC, id ASC",
+            (),
+        )
+
+    def get_achievement_by_level(self, level: int) -> tuple | None:
+        """Return (id, bp_level, description, picture) for achievement at this level or None."""
+        row = self.fetchone(
+            "SELECT id, bp_level, description, picture FROM ACHIVEMENTS WHERE bp_level = ? LIMIT 1",
+            (level,),
+        )
+        return row if row else None
+
+    def get_achievement_by_id(self, achivement_id: int) -> tuple | None:
+        """Return (id, bp_level, description, picture) or None."""
+        row = self.fetchone(
+            "SELECT id, bp_level, description, picture FROM ACHIVEMENTS WHERE id = ?",
+            (achivement_id,),
+        )
+        return row if row else None
+
+    def set_level_attendance(self, level: int, attendance: int) -> None:
+        """Set or update attendance threshold for a level. Creates row if level missing."""
+        self.cursor.execute(
+            "UPDATE BP_LEVELS SET attendence = ? WHERE level = ?",
+            (attendance, level),
+        )
+        self.conn.commit()
+        if self.cursor.rowcount == 0:
+            self.execute(
+                "INSERT INTO BP_LEVELS (attendence, level) VALUES (?, ?)",
+                (attendance, level),
+                commit=True,
+            )
+
+    def set_achievement_for_level(self, level: int, description: str, picture: str = "") -> None:
+        """Create or update the achievement for this bp_level (single achievement per level)."""
+        row = self.get_achievement_by_level(level)
+        if row:
+            self.execute(
+                "UPDATE ACHIVEMENTS SET description = ?, picture = ? WHERE id = ?",
+                (description, picture or "", row[0]),
+                commit=True,
+            )
+        else:
+            self.execute(
+                "INSERT INTO ACHIVEMENTS (bp_level, description, picture) VALUES (?, ?, ?)",
+                (level, description, picture or ""),
+                commit=True,
+            )
+
+    def create_achievement(self, bp_level: int, description: str, picture: str = "") -> int:
+        """Insert a new achievement. Returns new id."""
+        self.cursor.execute(
+            "INSERT INTO ACHIVEMENTS (bp_level, description, picture) VALUES (?, ?, ?)",
+            (bp_level, description, picture or ""),
+        )
+        self.conn.commit()
+        return self.cursor.lastrowid
+
+    def update_achievement(
+        self, achivement_id: int, bp_level: int, description: str, picture: str = ""
+    ) -> bool:
+        """Update existing achievement. Returns True if a row was updated."""
+        self.cursor.execute(
+            "UPDATE ACHIVEMENTS SET bp_level = ?, description = ?, picture = ? WHERE id = ?",
+            (bp_level, description, picture or "", achivement_id),
+        )
+        self.conn.commit()
+        return self.cursor.rowcount > 0
+
+    def delete_achievement(self, achivement_id: int) -> bool:
+        """Delete achievement by id. Returns True if a row was deleted."""
+        self.cursor.execute("DELETE FROM ACHIVEMENTS WHERE id = ?", (achivement_id,))
+        self.conn.commit()
+        return self.cursor.rowcount > 0
+
+    def _get_user_attendance(self, uid: int) -> int:
+        """Count user's attendance: distinct non-disbanded events they participated in."""
+        row = self.fetchone(
+            """
+            SELECT COUNT(DISTINCT etu.message_id)
+            FROM EVENTS_TO_USERS etu
+            JOIN EVENTS e ON e.message_id = etu.message_id
+            WHERE etu.ds_uid = ? AND (e.disband IS NULL OR e.disband != 1)
+            """,
+            (uid,),
+        )
+        return row[0] if row else 0
+
+    def calculate_user_achivements(self, uid: int) -> list[tuple]:
+        """
+        Calculate user's level from attendance, sync ACHIVEMENTS_TO_USERS with all
+        achievements they should have, and return those achievements.
+        Returns list of (id, bp_level, description, picture) for the user.
+        """
+        attendance = self._get_user_attendance(uid)
+        levels = self.get_bp_levels()
+        levels_reached = sorted(set(lev for lev, thresh in levels if attendance >= thresh))
+        if not levels_reached:
+            return []
+
+        placeholders = ",".join("?" * len(levels_reached))
+        achievements_to_grant = self.fetchall(
+            f"SELECT id, bp_level, description, picture FROM ACHIVEMENTS WHERE bp_level IN ({placeholders})",
+            tuple(levels_reached),
+        )
+        now_utc = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        for row in achievements_to_grant:
+            aid = row[0]
+            self.cursor.execute(
+                """
+                INSERT OR IGNORE INTO ACHIVEMENTS_TO_USERS (ds_uid, achivement_id, created, taken)
+                VALUES (?, ?, ?, 1)
+                """,
+                (uid, aid, now_utc),
+            )
+        self.conn.commit()
+
+        return self.fetchall(
+            """
+            SELECT a.id, a.bp_level, a.description, a.picture
+            FROM ACHIVEMENTS a
+            JOIN ACHIVEMENTS_TO_USERS atu ON atu.achivement_id = a.id
+            WHERE atu.ds_uid = ?
+            ORDER BY a.bp_level ASC, a.id ASC
+            """,
+            (uid,),
+        )
+
+    def calculate_all_users_achivements(self) -> list[tuple]:
+        """
+        Run calculate_user_achivements for every user in USERS.
+        Returns list of (uid, achievement_count) for each user after sync.
+        """
+        uids = [row[0] for row in self.fetchall("SELECT uid FROM USERS", ())]
+        result = []
+        for uid in uids:
+            achievements = self.calculate_user_achivements(uid)
+            result.append((uid, len(achievements)))
+        return result
+
 
 def format_sqlite_rows(rows, headers=None, max_rows=20):
     if not rows:
