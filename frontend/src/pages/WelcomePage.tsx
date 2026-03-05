@@ -4,6 +4,7 @@ import { motion } from "framer-motion"
 import gsap from "gsap"
 import ScrollTrigger from "gsap/ScrollTrigger"
 import Lenis from "@studio-freight/lenis"
+import { api } from "../lib/api"
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -199,8 +200,39 @@ export default function WelcomePage() {
       deaths: 1100,
       killFame: "625.4m",
     }
-    setStats(fallback)
-    setStatsLoading(false)
+    let cancelled = false
+    setStatsLoading(true)
+    api
+      .getMordorStats()
+      .then((res) => {
+        if (cancelled) return
+        const s = res.summary
+        const kf = s?.total_kill_fame
+        const killFameStr =
+          kf == null || kf === 0
+            ? "—"
+            : kf >= 1_000_000
+              ? `${(kf / 1_000_000).toFixed(1)}m`
+              : kf >= 1_000
+                ? `${(kf / 1_000).toFixed(1)}k`
+                : String(kf)
+        setStats({
+          avgAttendance: s?.average_attendance ?? fallback.avgAttendance,
+          avgIp: s?.average_ip ?? fallback.avgIp,
+          kills: s?.total_kills ?? fallback.kills,
+          deaths: s?.total_deaths ?? fallback.deaths,
+          killFame: killFameStr,
+        })
+      })
+      .catch(() => {
+        if (!cancelled) setStats(fallback)
+      })
+      .finally(() => {
+        if (!cancelled) setStatsLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   useEffect(() => {
@@ -517,9 +549,9 @@ export default function WelcomePage() {
           </h1>
 
           <p className="mt-5 max-w-2xl text-base text-white/70 md:text-lg">
-            Ну тут текст чисто рандомно сейчас накидан
-            <span className="text-white/50"> потом и текст напишем нормальный</span>
-            <span className="text-white/70"> • LFG каждый день • своя Ава-КП • доступ на мирку</span>
+            хорошая локация проживания
+            <span className="text-white/50"> • бесконечный контент на любой вкус •</span>
+            <span className="text-white/70"> • Лучшая PvE гильдия в альбионе • Своя система батлпасса</span>
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -545,9 +577,9 @@ export default function WelcomePage() {
 
           <div className="mt-10 grid w-full max-w-4xl grid-cols-1 gap-3 md:grid-cols-3">
             {[
-              ["LFG", "Много групп", "Не ждёшь — играешь"],
-              ["Налоги", "0%", "Лут твой, точка"],
-              ["Prime", "12–18 UTC", "Живое окно активности"],
+              ["Локация", "Glassierfall Pass", "тх локация близко от Морганы"],
+              ["Prime", "8–22 UTC", "Всегда онлайн"],
+              ["Авторы", "От создателя бывшей лучшей PVE гильдии", "Новый проект, новый уровень"],
             ].map(([a, b, c]) => (
               <div
                 key={a}
@@ -584,8 +616,10 @@ export default function WelcomePage() {
                 {[
                   ["Большое количество LFG", "Стабильно собираем группы на активности"],
                   ["Никаких налогов", "То, что выбил — твоё"],
-                  ["Своя Ава-КП", "Собранная команда под ключевые форматы"],
-                  ["Доступ на мирку", "Удобный старт и быстрая логистика"],
+                  ["Первая гильдия с баттлпассом", "Отборные плюшки - только для тебя"],
+                  ["Быстрая прокачка", "Статики и мирка"],
+                  ["Лояльны к игрокам", "Принимаем после бана"],
+                  ["PvE гильдия", "Но можно собирать ослячки, ганги и роумы"],
                 ].map(([t, s]) => (
                   <li key={t} className="flex gap-3">
                     <span className="mt-1 inline-flex h-6 w-6 items-center justify-center rounded-lg border border-amber-200/25 bg-amber-200/10 text-amber-200/80">
@@ -603,24 +637,23 @@ export default function WelcomePage() {
             <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-6">
               <div className="absolute -inset-24 opacity-35 blur-3xl [background:radial-gradient(circle_at_30%_20%,rgba(255,215,128,0.24),transparent_60%),radial-gradient(circle_at_70%_65%,rgba(120,170,255,0.14),transparent_60%)]" />
               <div className="relative">
-                <div className="text-xs tracking-widest text-white/60">РУННЫЙ КАМЕНЬ</div>
+                <div className="text-xs tracking-widest text-white/60">РУЮННЫЙ КАМЕНЬ</div>
                 <div className="mt-2 text-2xl font-semibold">Правила простые</div>
                 <RuneDivider className="my-6" />
                 <div className="space-y-4 text-sm text-white/70">
                   <div className="flex items-start justify-between gap-4">
-                    <div>Налоги</div>
-                    <div className="font-semibold text-amber-100">0%</div>
+                    <div>Никакой</div>
+                    <div className="font-semibold text-amber-100">политики</div>
                   </div>
                   <div className="flex items-start justify-between gap-4">
-                    <div>Прайм</div>
-                    <div className="font-semibold text-amber-100">12–18 UTC</div>
+                    <div>Никаких</div>
+                    <div className="font-semibold text-amber-100">конфликтов</div>
                   </div>
                   <div className="flex items-start justify-between gap-4">
-                    <div>LFG</div>
-                    <div className="font-semibold text-amber-100">каждый день</div>
+                    <div>Отличный</div>
+                    <div className="font-semibold text-amber-100">актив</div>
                   </div>
                   <div className="rounded-2xl border border-white/10 bg-black/30 p-4 text-white/65">
-                    <div className="text-xs tracking-widest text-white/50">ПЛЕЙСХОЛДЕР</div>
                     <div className="mt-2">
                       
                     </div>
@@ -698,13 +731,6 @@ export default function WelcomePage() {
                   />
                 </div>
               </div>
-
-              <div className="mt-8 rounded-2xl border border-white/10 bg-black/25 p-5 text-sm text-white/65">
-                <div className="text-xs tracking-widest text-white/45">ПРИМЕЧАНИЕ</div>
-                <div className="mt-2">
-                  Сейчас цифры — заглушки. Потом добавлю fetch к <span className="text-white/80">/api/mordor-stats</span> — и станет динамика
-                </div>
-              </div>
             </div>
           </div>
         </section>
@@ -728,9 +754,9 @@ export default function WelcomePage() {
             {[
               { t: "LFG каждый день", s: "Внутри всегда есть кому пойти в активность", r: "ᛖ" },
               { t: "Без налогов", s: "Никаких налогов «потому что так принято»", r: "ᛜ" },
-              { t: "Своя Ава-КП", s: "Стабильная команда под важные форматы", r: "ᛞ" },
-              { t: "Доступ на мирку", s: "Удобная логистика и быстрый старт", r: "ᛃ" },
-              { t: "Прайм 12–18 UTC", s: "Активное окно — не «когда-нибудь»", r: "ᛇ" },
+              { t: "Свои скупщики лута", s: "Избавляют от рутины и духоты", r: "ᛞ" },
+              { t: "Баттлпасс", s: "Первый в альбионе, с кучей плюшек", r: "ᛃ" },
+              { t: "Прайм 8–22 UTC", s: "Актив в уодбное тебе время", r: "ᛇ" },
               { t: "Союз с PvP", s: "Сильные друзья рядом, без будок не останешься", r: "ᚱ" },
             ].map((x, i) => (
               <motion.div
@@ -752,7 +778,7 @@ export default function WelcomePage() {
                   <div className="mt-3 text-sm text-white/65">{x.s}</div>
                   <div className="mt-5 h-px w-full bg-gradient-to-r from-transparent via-white/12 to-transparent" />
                   <div className="mt-4 text-xs text-white/45">
-                    Плейсхолдер под лор-фразу/мем гильдии
+                    -
                   </div>
                 </div>
               </motion.div>
@@ -884,10 +910,10 @@ export default function WelcomePage() {
                 </div>
                 <h2 className="mt-3 text-3xl font-semibold md:text-4xl">Готов войти в Эребор?</h2>
                 <p className="mt-4 text-white/70">
-                  Жми кнопку. В Discord тебя подхватят. Напиши, чем занимаешься и что хочешь фармить — и тебе найдут группу
+                  Заходи в дискорд, читай "знакомство", бери пример анкеты и открывай тикет. Как создашь тикет - обязательно пингани рекрутеров!
                 </p>
                 <div className="mt-5 text-sm text-white/60">
-                  PvE • без налогов • LFG • своя Ава-КП • 12–18 UTC
+                  PvE • без налогов • баттлпасс • статики и мирка • 8–22 UTC
                 </div>
               </div>
 
@@ -904,7 +930,7 @@ export default function WelcomePage() {
                 <div className="rounded-2xl border border-white/10 bg-black/25 p-5 text-sm text-white/65">
                   <div className="text-xs tracking-widest text-white/45">СОВЕТ</div>
                   <div className="mt-2">
-                    Для первого сообщения: ник в Albion, что любишь (HCE/Авалонки/мирка/фарм), и активное время
+                    не пингуй рекрутеров слишком часто, достаточно 1го раза
                   </div>
                 </div>
               </div>

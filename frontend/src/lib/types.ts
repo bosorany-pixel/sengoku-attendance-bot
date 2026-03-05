@@ -95,3 +95,23 @@ export interface UserAchievementsResponse {
   achievements: Achievement[];
   total_count: number;
 }
+
+/** Mordor guild stats from Albion BB (GET /api/stats/mordor). */
+export interface MordorStatsSummary {
+  average_attendance?: number;
+  average_ip?: number;
+  total_kills?: number;
+  total_deaths?: number;
+  total_kill_fame?: number;
+  total_death_fame?: number;
+  total_damage?: number;
+  total_heal?: number;
+}
+
+export interface MordorStatsResponse {
+  guild_name: string;
+  source: string;
+  summary: MordorStatsSummary;
+  players_count: number;
+  players: unknown[];
+}

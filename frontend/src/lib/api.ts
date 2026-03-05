@@ -9,6 +9,7 @@ import type {
   ArchivesListResponse,
   LevelsAndAchievementsResponse,
   UserAchievementsResponse,
+  MordorStatsResponse,
 } from './types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
@@ -63,5 +64,10 @@ export const api = {
 
   getUserAchievements: async (uid: string): Promise<UserAchievementsResponse> => {
     return fetchAPI<UserAchievementsResponse>(`/members/${uid}/achievements`);
+  },
+
+  /** Mordor guild stats from Albion BB (summary + players). */
+  getMordorStats: (): Promise<MordorStatsResponse> => {
+    return fetchAPI<MordorStatsResponse>('/stats/mordor');
   },
 };

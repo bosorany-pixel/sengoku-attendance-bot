@@ -252,6 +252,7 @@ async def get_member_achievements(uid: str):
 
 
 @app.get("/stats/mordor")
+@app.get("/api/stats/mordor")
 async def stats_mordor():
     """
     Mordor guild attendance stats from Albion BB (europe.albionbb.com).
