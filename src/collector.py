@@ -1,8 +1,11 @@
 import os
+import dotenv
+env_file = os.getenv("ENV_FILE", ".env")
+print(f"env file {env_file}")
+dotenv.load_dotenv(env_file)
 import sys
 import discord
 from datetime import datetime, timedelta, timezone
-import dotenv
 import datatypes
 import common
 import CONSTANTS
@@ -10,7 +13,7 @@ import db_worker as dbw
 import logger
 import pandas as pd
 from io import BytesIO
-dotenv.load_dotenv()
+
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 
