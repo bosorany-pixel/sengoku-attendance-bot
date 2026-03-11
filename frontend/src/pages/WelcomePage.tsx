@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react"
 import { Link } from "react-router-dom"
 import { motion } from "framer-motion"
+import { IS_EREBOR } from "../lib/install"
 import gsap from "gsap"
 import ScrollTrigger from "gsap/ScrollTrigger"
 import Lenis from "@studio-freight/lenis"
@@ -425,7 +426,7 @@ export default function WelcomePage() {
       <div className="welcome-text-glow relative z-10">
       <div className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-black/40 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3">
-          <Link to="/" className="flex items-center gap-3 text-white hover:text-white/90 focus:outline-none focus:underline">
+          <Link to={IS_EREBOR ? "/members" : "/"} className="flex items-center gap-3 text-white hover:text-white/90 focus:outline-none focus:underline">
             <div className="h-9 w-9 rounded-xl border border-amber-200/25 bg-gradient-to-b from-amber-200/10 to-transparent shadow-[0_0_22px_rgba(255,210,120,0.12)]" />
             <div className="leading-tight">
               <div className="text-sm font-semibold tracking-wide">EREBOR</div>

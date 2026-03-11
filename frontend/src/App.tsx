@@ -30,6 +30,7 @@ function App() {
         <Routes>
           <Route path="/" element={IS_EREBOR ? <WelcomePage /> : <MembersPage />} />
           <Route path="/welcome" element={IS_EREBOR ? <WelcomePage /> : <Navigate to="/" replace />} />
+          <Route path="/members" element={IS_EREBOR ? <MembersPage /> : <Navigate to="/" replace />} />
           <Route path="/member/:uid" element={<MemberDetailPage />} />
           <Route path="/user/:uid" element={<RedirectToMember tab="events" />} />
           <Route path="/payment/:uid" element={<RedirectToMember tab="payments" />} />
