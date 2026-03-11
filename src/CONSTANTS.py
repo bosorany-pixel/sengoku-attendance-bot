@@ -1,7 +1,7 @@
 import dotenv
 import os
 from datetime import date
-dotenv.load_dotenv()
+dotenv.load_dotenv(os.getenv("ENV_FILE", ".env"))
 
 GUILD_IDS = {
     1355240968621658242,
@@ -17,21 +17,20 @@ REACTION_NO = '❌'
 MIN_USERS = 4
 TREASURY_POINTS = 15
 CHANNELS = {
-    1355377613459161148: 3, # lfg
-    1355377675845505034: 3, # pvp
-    1355377776810659980: 3, # pve
-    1355377711979302993: 3, # gang
-    1389934518403731507: 2, # group-maps
-    1355377749828567040: 3, # ava-dungeon
-    1363140680985346242: 5, # zvz
-    1419352914258038805: 5, # zvz fast mass
+    1478101710487425117: 2, # lfg
+    1479081748544487424: 2, # group camps
+    1479081712997634164: 2, # static
+    1479081771634135122: 2, # hunt
+    1479081790076358739: 3, # gang
+    1479081830358581441: 3, # roum
+    1478101709921194105: 4, # ava-dungeon
 }
 
 HIDDEN = {
-    1345611337559965737: 3, # gru-morning
-    1345611509127970906: 3, # gru-day
-    1345611851026792500: 3, # gru-evening
-    1345611986033180683: 3, # gru-night
+    1345611337559965737: 4, # gru-morning
+    1345611509127970906: 4, # gru-day
+    1345611851026792500: 4, # gru-evening
+    1345611986033180683: 4, # gru-night
 }
 POINTS_GROUP_MAP = 2
 RENTOR_NAME = 'Rentor'
@@ -59,3 +58,5 @@ ADMIN_ROLES = {
     "Recruiter": 4
 }
 TODAY = date.today()
+
+MEMBER_ROLE = os.getenv("MEMBER_ROLE", 'Half Orc')

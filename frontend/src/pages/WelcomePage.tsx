@@ -124,7 +124,7 @@ export default function WelcomePage() {
   const galleryRef = useRef<HTMLDivElement | null>(null)
   const contactRef = useRef<HTMLDivElement | null>(null)
 
-  const DISCORD_INVITE = "https://discord.gg/PASTE_YOUR_INVITE"
+  const DISCORD_INVITE = "https://discord.gg/sNUMpu2wck"
 
   const [stats, setStats] = useState<MordorStats | null>(null)
   const [statsLoading, setStatsLoading] = useState(true)
