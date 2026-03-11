@@ -5,7 +5,13 @@ import dotenv
 import src.db_worker as dbw
 import src.datatypes as datatypes
 import src.common as common
-dotenv.load_dotenv()
+
+env_file = os.getenv("ENV_FILE", ".env")
+
+print(f"env file {env_file}")
+
+dotenv.load_dotenv(env_file)
+
 
 db_worker = dbw.DBWorker()
 
@@ -61,6 +67,7 @@ if __name__ == "__main__":
     @bot.event
     async def on_ready():
         print(f"bot ready as {bot.user}")
+        print(f'guild {int(os.getenv("DISCORD_GUILD_ID", "0"))}')
         await get_nicks(guild_id=int(os.getenv("DISCORD_GUILD_ID", "0")), local_bot=bot)
         await bot.close()
 
