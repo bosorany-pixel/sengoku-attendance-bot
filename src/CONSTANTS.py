@@ -49,6 +49,9 @@ else:
     MONTHLY_CALC = str(MONTHLY_CALC).strip().lower() in ("1", "true", "yes", "y", "on")
 
 REPORT_CHANNEL_ID = 1355432420320739429
+# Channel ID for logging new achievements (set via env LOGS_CHANNEL_ID; if unset, no messages sent)
+_logs_channel = os.getenv("LOGS_CHANNEL_ID")
+LOGS_CHANNEL_ID = int(_logs_channel) if _logs_channel and _logs_channel.strip() else None
 ADMIN_ROLES = {
     "Rentor": 0,
     "Officer": 2,

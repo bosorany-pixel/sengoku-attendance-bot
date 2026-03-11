@@ -40,3 +40,49 @@ services:
     depends_on:
       - api
     restart: unless-stopped
+
+  # Erebor installation: welcome page, own DB and Discord bot.
+  # Create .env.erebor with DISCORD_BOT_TOKEN and DISCORD_GUILD_ID (DB_PATH is set below).
+  erebor-discord-bot:
+    build: .
+    container_name: erebor-discord-bot
+    volumes:
+      - ./bot_data_erebor:/app/bot_data
+      - /mnt/db:/db
+    env_file: .env.erebor
+    environment:
+      - DB_PATH=/db/erebor_bot.db
+    restart: unless-stopped
+
+  erebor-api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: erebor-api
+    ports:
+      - "8110:8000"
+    environment:
+      - DB_PATH=/db/erebor_bot.db
+      - API_PORT=8000
+      - TECHNICAL_TIMEOUT=${TECHNICAL_TIMEOUT_EREBOR:-0}
+    volumes:
+      - /mnt/db:/db
+      - /mnt/archives_erebor:/app/archives
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  erebor-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.erebor
+    container_name: erebor-frontend
+    ports:
+      - "8112:80"
+    depends_on:
+      - erebor-api
+    restart: unless-stopped

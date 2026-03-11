@@ -3,6 +3,7 @@ import { useMembers } from '../hooks/useMembers';
 import { Layout } from '../components/Layout';
 import { MemberTable } from '../components/MemberTable';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { IS_EREBOR } from '../lib/install';
 
 export function MembersPage() {
   const [searchParams] = useSearchParams();
@@ -30,7 +31,7 @@ export function MembersPage() {
   const subtitle = `Всего мемберов: ${members.length}`;
 
   return (
-    <Layout title="EREBOR" titleHref="/welcome" subtitle={subtitle} showSidebar={false}>
+    <Layout title="EREBOR" titleHref={IS_EREBOR ? "/welcome" : undefined} subtitle={subtitle} showSidebar={false}>
       <MemberTable members={members} />
     </Layout>
   );

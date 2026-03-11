@@ -4,6 +4,7 @@ import { MembersPage } from './pages/MembersPage';
 import { MemberDetailPage } from './pages/MemberDetailPage';
 import { TimeoutPage } from './pages/TimeoutPage';
 import WelcomePage from './pages/WelcomePage';
+import { IS_EREBOR } from './lib/install';
 
 function RedirectToMember({ tab }: { tab: string }) {
   const { uid } = useParams<{ uid: string }>();
@@ -27,8 +28,8 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter basename={import.meta.env.BASE_URL}>
         <Routes>
-          <Route path="/" element={<MembersPage />} />
-          <Route path="/welcome" element={<WelcomePage />} />
+          <Route path="/" element={IS_EREBOR ? <WelcomePage /> : <MembersPage />} />
+          <Route path="/welcome" element={IS_EREBOR ? <WelcomePage /> : <Navigate to="/" replace />} />
           <Route path="/member/:uid" element={<MemberDetailPage />} />
           <Route path="/user/:uid" element={<RedirectToMember tab="events" />} />
           <Route path="/payment/:uid" element={<RedirectToMember tab="payments" />} />

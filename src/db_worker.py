@@ -459,6 +459,14 @@ VALUES (?, ?)
         )
         return row if row else None
 
+    def get_user_achievement_ids(self, uid: int) -> list[int]:
+        """Return list of achievement ids currently granted to the user."""
+        rows = self.fetchall(
+            "SELECT achivement_id FROM ACHIVEMENTS_TO_USERS WHERE ds_uid = ?",
+            (uid,),
+        )
+        return [r[0] for r in rows]
+
     def set_level_attendance(self, level: int, attendance: int) -> None:
         """Set or update attendance threshold for a level. Creates row if level missing."""
         self.cursor.execute(
