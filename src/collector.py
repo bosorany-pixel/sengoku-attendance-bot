@@ -6,11 +6,11 @@ dotenv.load_dotenv(env_file)
 import sys
 import discord
 from datetime import datetime, timedelta, timezone
-import datatypes
-import common
-import CONSTANTS
-import db_worker as dbw
-import logger
+import src.datatypes as datatypes
+import src.common as common
+import src.CONSTANTS as CONSTANTS
+import src.db_worker as dbw
+import src.logger as logger
 import pandas as pd
 from io import BytesIO
 
