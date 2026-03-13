@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { SparkBackground } from './SparkBackground';
 import { motion, AnimatePresence } from 'framer-motion';
+import { IS_EREBOR } from '../lib/install';
 
 interface LayoutProps {
   children: ReactNode;
@@ -22,7 +23,9 @@ export function Layout({ children, title, titleHref, subtitle, showSidebar = tru
     <div
       className="min-h-screen p-5 relative"
       style={{
-        background: 'linear-gradient(to top, #7f1d1d 0%, #1e1e1e 50%, #1e1e1e 100%)',
+        background: IS_EREBOR
+          ? 'linear-gradient(to top, #b45309 0%, #1e1e1e 50%, #1e1e1e 100%)'
+          : 'linear-gradient(to top, #7f1d1d 0%, #1e1e1e 50%, #1e1e1e 100%)',
         backgroundAttachment: 'fixed',
       }}
     >

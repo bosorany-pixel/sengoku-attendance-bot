@@ -1,11 +1,19 @@
 import os
+import dotenv
+
+# Load env file before any other local imports; otherwise e.g. monthly_results
+# is imported via db_worker/datatypes and calls load_dotenv() (default .env),
+# and with override=False our .env.erebor would not override those values.
+env_file = os.getenv("ENV_FILE", ".env")
+print(f"env file {env_file}")
+dotenv.load_dotenv(env_file)
+
 import discord
 from discord.ext import commands
-import dotenv
 import src.db_worker as dbw
 import src.datatypes as datatypes
 import src.common as common
-dotenv.load_dotenv()
+
 
 db_worker = dbw.DBWorker()
 
@@ -61,6 +69,7 @@ if __name__ == "__main__":
     @bot.event
     async def on_ready():
         print(f"bot ready as {bot.user}")
+        print(f'guild {int(os.getenv("DISCORD_GUILD_ID", "0"))}')
         await get_nicks(guild_id=int(os.getenv("DISCORD_GUILD_ID", "0")), local_bot=bot)
         await bot.close()
 

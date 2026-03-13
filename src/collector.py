@@ -1,16 +1,19 @@
 import os
+import dotenv
+env_file = os.getenv("ENV_FILE", ".env")
+print(f"env file {env_file}")
+dotenv.load_dotenv(env_file)
 import sys
 import discord
 from datetime import datetime, timedelta, timezone
-import dotenv
-import datatypes
-import common
-import CONSTANTS
-import db_worker as dbw
-import logger
+import src.datatypes as datatypes
+import src.common as common
+import src.CONSTANTS as CONSTANTS
+import src.db_worker as dbw
+import src.logger as logger
 import pandas as pd
 from io import BytesIO
-dotenv.load_dotenv()
+
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 
@@ -89,6 +92,57 @@ async def analyze_usefulness_points(after: datetime = None, before: datetime = N
     # Placeholder for future implementation
     pass
 
+
+async def _display_name_for_uid(uid: int) -> str:
+    """Return display name for user: from DB or by fetching member from any guild."""
+    user = db_worker.get_user(uid)
+    if user and (user.server_username or user.global_username):
+        return user.server_username or user.global_username or str(uid)
+    for guild_id in CONSTANTS.GUILD_IDS:
+        try:
+            guild = client.get_guild(guild_id) or await client.fetch_guild(guild_id)
+            if guild:
+                member = guild.get_member(uid) or await guild.fetch_member(uid)
+                if member:
+                    return member.display_name
+        except Exception:
+            continue
+    return str(uid)
+
+
+async def sync_achievements_and_log_new():
+    """Sync achievements for all users and send a message to LOGS_CHANNEL for each new achievement."""
+    if CONSTANTS.LOGS_CHANNEL_ID is None:
+        return
+    log_channel = client.get_channel(CONSTANTS.LOGS_CHANNEL_ID)
+    if log_channel is None:
+        try:
+            log_channel = await client.fetch_channel(CONSTANTS.LOGS_CHANNEL_ID)
+        except Exception as e:
+            lgr.error(f"Could not fetch LOGS_CHANNEL {CONSTANTS.LOGS_CHANNEL_ID}: {e}")
+            return
+    uids = [row[0] for row in db_worker.fetchall("SELECT uid FROM USERS", ())]
+    for uid in uids:
+        before_ids = set(db_worker.get_user_achievement_ids(uid))
+        achievements = db_worker.calculate_user_achivements(uid)
+        new_achievements = [a for a in achievements if a[0] not in before_ids]
+        if not new_achievements:
+            continue
+        display_name = await _display_name_for_uid(uid)
+        for ach in new_achievements:
+            ach_id, bp_level, description, picture = ach
+            text = f"🎉 **{display_name}** получил достижение: **Уровень {bp_level}** — {description}"
+            try:
+                if picture and picture.strip().startswith("http"):
+                    embed = discord.Embed(description=text)
+                    embed.set_image(url=picture.strip())
+                    await log_channel.send(embed=embed)
+                else:
+                    await log_channel.send(text)
+            except Exception as e:
+                lgr.error(f"Failed to send achievement log for uid={uid} ach={ach_id}: {e}")
+
+
 @client.event
 async def on_ready():
     lgr.info(f"logged in as {client.user}")
@@ -99,6 +153,7 @@ async def on_ready():
         for ch in CONSTANTS.HIDDEN:
             await analyze_channel(ch, CONSTANTS.HIDDEN[ch], hide=True)
             lgr.info(f"analyzed hidden channel {ch}")
+        await sync_achievements_and_log_new()
         if CONSTANTS.MONTHLY_CALC:
             channel = client.get_channel(CONSTANTS.REPORT_CHANNEL_ID)
             df = db_worker.load_database_as_dataframe()

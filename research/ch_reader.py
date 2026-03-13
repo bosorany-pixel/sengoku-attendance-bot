@@ -3,7 +3,7 @@ import asyncio
 import discord
 import dotenv
 
-dotenv.load_dotenv()
+dotenv.load_dotenv(".env.erebor")
 
 TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 
@@ -25,6 +25,7 @@ async def on_ready():
     await client.close()
     file.close()
 
+print(f"client ready as {client.user}")
 if not TOKEN:
     raise SystemExit("set DISCORD_TOKEN")
 client.run(TOKEN)
