@@ -12,5 +12,5 @@ __pycache__/
 photoes/*
 *.png
 *.csv
-.env
+.env*
 *.md
